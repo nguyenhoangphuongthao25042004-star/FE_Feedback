@@ -1,3 +1,4 @@
+//Dữ liêu giả cho API đăng nhập
 import type { LoginRequest, User } from '../types/auth.types'
 
 type ApiResponse<T> = {

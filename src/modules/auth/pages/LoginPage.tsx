@@ -70,7 +70,7 @@ export default function LoginPage() {
             fontSize: 26,
             marginBottom: 4,
             fontWeight: 600,
-            color: '#1D4ED8'
+            color: '#2F55B7'
           }}
         >
           Smart Feedback

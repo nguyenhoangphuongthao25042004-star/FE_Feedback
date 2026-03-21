@@ -2,3 +2,39 @@
     padding: 0;
     margin: 0;
 }
+/* MENU DARK CUSTOM */
+.ant-menu {
+  color: #FFFFFF !important;
+}
+
+.ant-menu-item {
+  color: rgba(255, 255, 255, 0.9) !important;
+  margin: 6px 12px !important;
+  width: calc(100% - 24px) !important;
+  border-radius: 14px !important;
+  height: 46px !important;
+  line-height: 46px !important;
+}
+
+.ant-menu-item-selected {
+  background: #4B78D0 !important;
+  color: #FFFFFF !important;
+  font-weight: 600;
+  box-shadow: none !important;
+}
+
+.ant-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+.ant-layout-sider-trigger {
+  background: #1E418A !important;
+}
+
+.ant-menu-inline-collapsed .ant-menu-item {
+  padding-inline: calc(50% - 16px) !important;
+}
+
+.ant-menu-item .ant-menu-item-icon {
+  font-size: 18px !important;
+}
