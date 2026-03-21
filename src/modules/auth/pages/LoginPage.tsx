@@ -96,7 +96,12 @@ export default function LoginPage() {
           <Form.Item
             label="Email"
             name="email"
-            rules={[{ required: true, message: 'Vui lòng nhập email' }]}
+            rules={
+              [
+                { type: 'email', message: 'Vui lòng nhập đúng định dạng email' },
+                { required: true, message: 'Vui lòng nhập email' }
+              ]
+            }
           >
             <Input placeholder="Nhập email..." />
           </Form.Item>
