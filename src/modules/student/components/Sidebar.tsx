@@ -20,7 +20,7 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
     <div
       style={{
         height: '100%',
-        background: 'linear-gradient(180deg, #2D56B0 0%, #1F428F 100%)',
+        background: 'linear-gradient(180deg, #004286 0%, #001F4C 100%)',
         display: 'flex',
         flexDirection: 'column'
       }}

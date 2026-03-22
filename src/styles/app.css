@@ -17,7 +17,7 @@
 }
 
 .ant-menu-item-selected {
-  background: #4B78D0 !important;
+  background: rgba(255, 255, 255, 0.16) !important;
   color: #FFFFFF !important;
   font-weight: 600;
   box-shadow: none !important;
@@ -28,7 +28,7 @@
 }
 
 .ant-layout-sider-trigger {
-  background: #1E418A !important;
+  background: #004286 !important;
 }
 
 .ant-menu-inline-collapsed .ant-menu-item {

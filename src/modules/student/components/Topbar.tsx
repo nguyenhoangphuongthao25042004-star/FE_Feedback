@@ -1,11 +1,15 @@
-﻿import { Input, Avatar, Select, Space, Badge, Typography, Button } from 'antd' // Ant Design components
+import { Input, Avatar, Select, Space, Badge, Typography, Button } from 'antd' // Ant Design components
 import { BellOutlined, MenuOutlined } from '@ant-design/icons' //icon chuông thông báo và menu
+import logo from '../../../assets/STU-topbar.png'
+import collapsedLogo from '../../../assets/stu-logo.png'
 
 const { Text } = Typography // Lấy component Text từ Typography của Ant Design
 
 type TopbarProps = { // định nghĩa kiểu cho props của component Topbar
   isMobile: boolean
   isTablet: boolean
+  sidebarWidth?: number
+  collapsed?: boolean
   onMenuClick: () => void 
 }
 
@@ -14,7 +18,7 @@ const semesterOptions = [
   { value: '2025-2026-HK1', label: '2025 - 2026 - Học kỳ 1' }
 ]
 
-export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps) { //tạo component topbar
+export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collapsed = false, onMenuClick }: TopbarProps) { //tạo component topbar
   if (isMobile) { //nếu là mobile dùng layout riêng
     return (
       <div
@@ -45,18 +49,37 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
           }}
         />
 
-        <Text
-          strong
+        <Space
+          size={10}
           style={{
-            fontSize: 16,
-            color: '#163253',
-            lineHeight: 1.4,
             gridColumn: '2 / 3',
-            gridRow: '1 / 2'
+            gridRow: '1 / 2',
+            minWidth: 0
           }}
         >
-          Smart Feedback - Teaching Quality Dashboard
-        </Text>
+          <img
+            src={logo}
+            alt="STU"
+            style={{
+              width: 92,
+              height: 28,
+              objectFit: 'contain',
+              flexShrink: 0
+            }}
+          />
+
+          <Text
+            strong
+            style={{
+              fontSize: 16,
+              color: '#163253',
+              lineHeight: 1.4,
+              minWidth: 0
+            }}
+          >
+            Smart Feedback - Teaching Quality Dashboard
+          </Text>
+        </Space>
 
         <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3' }}>
           <Select
@@ -84,20 +107,40 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
           gap: 16
         }}
       >
-        <Text
-          strong
+        <Space
+          size={12}
           style={{
-            fontSize: 16,
-            color: '#1C3D66',
             flex: 1,
             minWidth: 0,
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis'
+            overflow: 'hidden'
           }}
         >
-          Smart Feedback - Teaching Quality Dashboard
-        </Text>
+          <img
+            src={logo}
+            alt="STU"
+            style={{
+              width: 108,
+              height: 30,
+              objectFit: 'contain',
+              flexShrink: 0
+            }}
+          />
+
+          <Text
+            strong
+            style={{
+              fontSize: 16,
+              color: '#1C3D66',
+              flex: 1,
+              minWidth: 0,
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
+            }}
+          >
+            Smart Feedback - Teaching Quality Dashboard
+          </Text>
+        </Space>
 
         <Space size="middle" style={{ flexShrink: 0 }}>
           <Select
@@ -144,7 +187,7 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
 
           <Avatar
             style={{
-              backgroundColor: '#2F55B7',
+              backgroundColor: '#004286',
               minWidth: 44,
               height: 44,
               lineHeight: '44px'
@@ -160,16 +203,55 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
   return ( // layout mặc định cho desktop
     <div
       style={{
-        display: 'flex',
-        justifyContent: 'space-between',
+        display: 'grid',
+        gridTemplateColumns: `${sidebarWidth}px minmax(0, 1fr)`,
         alignItems: 'center',
         height: '100%',
         background: '#FFFFFF',
-        padding: '0 4px'
+        padding: '0 24px 0 0',
+        gap: 0
       }}
     >
-      <Space size="middle">
-        <Text strong style={{ fontSize: 18, color: '#1C3D66' }}>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: collapsed ? 'flex-start' : 'center',
+          paddingLeft: collapsed ? 8 : 0,
+          minWidth: 0
+        }}
+      >
+        <img
+          src={collapsed ? collapsedLogo : logo}
+          alt="STU"
+          style={{
+            width: collapsed ? 44 : 170,
+            height: collapsed ? 44 : 34,
+            objectFit: 'contain',
+            objectPosition: 'left center',
+            flexShrink: 0
+          }}
+        />
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          minWidth: 0,
+          paddingLeft: 48,
+          gap: 32
+        }}
+      >
+        <Text
+          strong
+          style={{
+            fontSize: 18,
+            color: '#1C3D66',
+            whiteSpace: 'nowrap',
+            flexShrink: 0
+          }}
+        >
           Smart Feedback - Teaching Quality Dashboard
         </Text>
 
@@ -180,14 +262,12 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
           size="large"
           options={semesterOptions}
         />
-      </Space>
 
-      <Space size="middle">
         <Input
           aria-label="Tìm kiếm"
           placeholder="Tìm kiếm..."
           style={{
-            width: 220,
+            width: 360,
             height: 44,
             borderRadius: 999,
             background: '#F4F7FC',
@@ -219,7 +299,7 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
 
         <Avatar
           style={{
-            backgroundColor: '#2F55B7',
+            backgroundColor: '#004286',
             minWidth: 44,
             height: 44,
             lineHeight: '44px'
@@ -227,7 +307,7 @@ export default function Topbar({ isMobile, isTablet, onMenuClick }: TopbarProps)
         >
           SV
         </Avatar>
-      </Space>
+      </div>
     </div>
   )
 }

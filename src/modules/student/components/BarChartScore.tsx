@@ -52,7 +52,7 @@ export default function BarChartScore({ data }: Props) {
           <YAxis tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} /> {/* trục dọc */}
           <Tooltip />
           <Legend formatter={() => 'Điểm trung bình'} />
-          <Bar dataKey="score" name="Điểm trung bình" fill="#2F55B7" radius={[10, 10, 0, 0]} />
+          <Bar dataKey="score" name="Điểm trung bình" fill="#004286" radius={[10, 10, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

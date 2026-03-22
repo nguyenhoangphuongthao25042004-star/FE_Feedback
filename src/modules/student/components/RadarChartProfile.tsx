@@ -40,8 +40,8 @@ export default function RadarChartProfile({ data }: Props) {
           <Radar
             dataKey="value"
             name="Mức độ học tập"
-            stroke="#2F55B7"
-            fill="#2F55B7"
+            stroke="#004286"
+            fill="#004286"
             fillOpacity={0.35}
           />
         </RadarChart>

@@ -15,8 +15,10 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const screens = useBreakpoint() //lấy thông tin kích thước hiện tại
   const isMobile = !screens.md //nếu không có kích thước md thì xem là mobile
   const isTablet = Boolean(screens.md && !screens.lg)
+  const headerHeight = isMobile ? 112 : 72
   const [collapsed, setCollapsed] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false) //trạng thái mở hay đóng menu trên mobile
+  const sidebarWidth = collapsed ? 88 : 220
 
   useEffect(() => { //chạy mỗi khi kích thước thay đổi
     if (isMobile) {
@@ -37,14 +39,14 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           collapsedWidth={88}
           trigger={null}
           style={{
-            background: 'linear-gradient(180deg, #2D56B0 0%, #1F428F 100%)',
-            boxShadow: '10px 0 28px rgba(31, 66, 143, 0.16)',
+            background: 'linear-gradient(180deg, #004286 0%, #001F4C 100%)',
+            boxShadow: '10px 0 28px rgba(0, 45, 109, 0.2)',
             position: 'fixed',
             insetInlineStart: 0,
-            top: 0,
+            top: headerHeight,
             bottom: 0,
-            height: '100vh',
-            zIndex: 100
+            height: `calc(100vh - ${headerHeight}px)`,
+            zIndex: 80
           }}
         >
           <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} /> 
@@ -67,17 +69,20 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
       <Layout
         style={{
           background: '#EEF3FB',
-          marginLeft: isMobile ? 0 : (collapsed ? 88 : 220)
+          marginLeft: 0,
+          marginTop: headerHeight
         }}
       >
         <Header
           style={{
             background: '#fff',
-            padding: isMobile ? '0 16px' : '0 24px',
+            padding: isMobile ? '0 16px' : '0 24px 0 0',
             borderBottom: '1px solid #D7E1F0',
-            height: isMobile ? 112 : 72,
+            height: headerHeight,
             lineHeight: 'normal',
-            position: 'sticky',
+            position: 'fixed',
+            left: 0,
+            right: 0,
             top: 0,
             zIndex: 90
           }}
@@ -85,6 +90,8 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
           <Topbar
             isMobile={isMobile}
             isTablet={isTablet}
+            sidebarWidth={sidebarWidth}
+            collapsed={collapsed}
             onMenuClick={() => setMobileMenuOpen(true)}
           />
         </Header>
@@ -92,6 +99,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
         <Content
           style={{
             padding: isMobile ? 16 : 24,
+            paddingLeft: isMobile ? 16 : sidebarWidth + 24,
             background: '#EEF3FB'
           }}
         >
