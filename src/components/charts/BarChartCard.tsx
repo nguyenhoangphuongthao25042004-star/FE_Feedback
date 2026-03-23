@@ -1,24 +1,27 @@
-﻿import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts' //import các thành phần cần cho biểu đồ cột
-import type { DashboardScoreItem } from '../types/student.types' //import kiểu dữ liệu cho props
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
-type Props = { //component này nhận một prop là data, có kiểu là mảng môn học
+import type { DashboardScoreItem } from '../../modules/student/types/student.types'
+
+// Kiểu props cho biểu đồ cột dùng chung
+type BarChartCardProps = {
   data: DashboardScoreItem[]
 }
 
-export default function BarChartScore({ data }: Props) { 
-  const shortSubjectNames: Record<string, string> = { //bảng mapping tên đầy đủ sang tên viết tắt
+// Biểu đồ cột dùng chung để hiển thị điểm đánh giá theo môn học
+export default function BarChartCard({ data }: BarChartCardProps) {
+  const shortSubjectNames: Record<string, string> = {
     'AI cơ bản và ứng dụng': 'AICBVUD',
-    'Xây dựng phần mềm thiết bị di động': 'XDPMTBDĐ',
+    'Xây dựng phần mềm thiết bị di động': 'XDPMTBDD',
     'Xây dựng phần mềm web': 'XDPMW',
     'Thực tập tốt nghiệp': 'TTTN'
-  }
+  } // map tên môn dài sang tên ngắn để trục X gọn hơn
 
-  const getShortSubjectName = (subject: string) => shortSubjectNames[subject] ?? subject //hàm lấy tên viết tắt
+  const getShortSubjectName = (subject: string) => shortSubjectNames[subject] ?? subject // trả về tên viết tắt nếu có
 
-  return ( //giao diện biểu đồ cột
+  return (
     <div
       role="region"
-      aria-label="Biểu đồ điểm theo môn học" 
+      aria-label="Biểu đồ điểm theo môn học"
       style={{
         height: '100%',
         width: '100%',
@@ -40,7 +43,7 @@ export default function BarChartScore({ data }: Props) {
       <ResponsiveContainer width="100%" height={360}>
         <BarChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 40 }}>
           <CartesianGrid stroke="#E8EEF8" vertical={false} />
-          <XAxis // trục ngang 
+          <XAxis
             dataKey="subject"
             interval={0}
             height={56}
@@ -49,7 +52,7 @@ export default function BarChartScore({ data }: Props) {
             axisLine={false}
             tickLine={false}
           />
-          <YAxis tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} /> {/* trục dọc */}
+          <YAxis tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} />
           <Tooltip />
           <Legend formatter={() => 'Điểm trung bình'} />
           <Bar dataKey="score" name="Điểm trung bình" fill="#004286" radius={[10, 10, 0, 0]} />

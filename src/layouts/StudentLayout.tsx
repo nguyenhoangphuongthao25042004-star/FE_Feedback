@@ -1,26 +1,31 @@
-﻿import { useEffect, useState } from 'react' //usestate lưu trạng thái thu gọn của sidebar, useeffect chạy lại logic khi màn hình thay đổi
-import type { ReactNode } from 'react' //định nghĩa kiểu cho children, là nội dung sẽ được hiển thị trong layout
-import { Drawer, Grid, Layout } from 'antd' //drawer là menu trượt ra trên mobile, grid để biết kích thước đang là mobile/tablet/desktop
-import Sidebar from '../modules/student/components/Sidebar'
-import Topbar from '../modules/student/components/Topbar'
+import type { ReactNode } from 'react'
+import { useEffect, useState } from 'react'
+import { Drawer, Grid, Layout } from 'antd'
+import { Outlet } from 'react-router-dom'
 
-const { Sider, Header, Content } = Layout //phân tách các phần của layout để dễ sử dụng hơn
-const { useBreakpoint } = Grid //hook để biết kích thước màn hình
+import Sidebar from '../components/layout/Sidebar'
+import Topbar from '../components/layout/Topbar'
 
-type StudentLayoutProps = { //định nghĩa kiểu cho props của layout
-  children: ReactNode
+const { Sider, Header, Content } = Layout // tách các phần chính của layout từ Ant Design
+const { useBreakpoint } = Grid // dùng breakpoints để xử lý desktop tablet mobile
+
+// Kiểu props để layout có thể nhận children trực tiếp hoặc dùng Outlet
+type StudentLayoutProps = {
+  children?: ReactNode
 }
 
+// Layout chính cho toàn bộ màn sinh viên
 export default function StudentLayout({ children }: StudentLayoutProps) {
-  const screens = useBreakpoint() //lấy thông tin kích thước hiện tại
-  const isMobile = !screens.md //nếu không có kích thước md thì xem là mobile
-  const isTablet = Boolean(screens.md && !screens.lg)
-  const headerHeight = isMobile ? 112 : 72
-  const [collapsed, setCollapsed] = useState(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false) //trạng thái mở hay đóng menu trên mobile
-  const sidebarWidth = collapsed ? 88 : 220
+  const screens = useBreakpoint() // lấy trạng thái breakpoints hiện tại
+  const isMobile = !screens.md // mobile khi nhỏ hơn md
+  const isTablet = Boolean(screens.md && !screens.lg) // tablet khi từ md đến trước lg
+  const headerHeight = isMobile ? 112 : 72 // header mobile cao hơn để đủ chỗ 2 hàng
+  const [collapsed, setCollapsed] = useState(false) // trạng thái thu gọn sidebar
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false) // trạng thái mở drawer trên mobile
+  const sidebarWidth = collapsed ? 88 : 220 // tính chiều rộng sidebar để chừa khoảng content
 
-  useEffect(() => { //chạy mỗi khi kích thước thay đổi
+  // Tự điều chỉnh sidebar theo từng breakpoint
+  useEffect(() => {
     if (isMobile) {
       setCollapsed(true)
       return
@@ -33,7 +38,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   return (
     <Layout style={{ minHeight: '100vh', background: '#EEF3FB' }}>
       {!isMobile && (
-        <Sider //sidebar cố định bên trái
+        <Sider
           width={220}
           collapsed={collapsed}
           collapsedWidth={88}
@@ -49,7 +54,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             zIndex: 80
           }}
         >
-          <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} /> 
+          <Sidebar collapsed={collapsed} onToggle={() => setCollapsed((prev) => !prev)} />
         </Sider>
       )}
 
@@ -103,7 +108,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             background: '#EEF3FB'
           }}
         >
-          {children}
+          {children ?? <Outlet />}
         </Content>
       </Layout>
     </Layout>

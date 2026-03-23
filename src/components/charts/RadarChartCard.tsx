@@ -1,11 +1,14 @@
-﻿import { Legend, PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts' //import các phần của biểu đồ radar 
-import type { StudyProfileItem } from '../types/student.types' //import kiểu dữ liệu 
+import { Legend, PolarAngleAxis, PolarGrid, Radar, RadarChart, ResponsiveContainer, Tooltip } from 'recharts'
 
-type Props = {
+import type { StudyProfileItem } from '../../modules/student/types/student.types'
+
+// Kiểu props cho radar chart dùng chung
+type RadarChartCardProps = {
   data: StudyProfileItem[]
 }
 
-export default function RadarChartProfile({ data }: Props) { 
+// Biểu đồ radar dùng chung để hiển thị hồ sơ phong cách học tập
+export default function RadarChartCard({ data }: RadarChartCardProps) {
   return (
     <div
       role="region"
@@ -31,19 +34,10 @@ export default function RadarChartProfile({ data }: Props) {
       <ResponsiveContainer width="100%" height={360}>
         <RadarChart data={data}>
           <PolarGrid stroke="#D7E1F0" />
-          <PolarAngleAxis
-            dataKey="name"
-            tick={{ fill: '#42546B', fontSize: 12 }}
-          />
+          <PolarAngleAxis dataKey="name" tick={{ fill: '#42546B', fontSize: 12 }} />
           <Tooltip />
           <Legend formatter={() => 'Mức độ học tập'} />
-          <Radar
-            dataKey="value"
-            name="Mức độ học tập"
-            stroke="#004286"
-            fill="#004286"
-            fillOpacity={0.35}
-          />
+          <Radar dataKey="value" name="Mức độ học tập" stroke="#004286" fill="#004286" fillOpacity={0.35} />
         </RadarChart>
       </ResponsiveContainer>
     </div>

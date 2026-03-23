@@ -1,12 +1,13 @@
-//Dữ liêu giả cho API đăng nhập
 import type { LoginRequest, User } from '../types/auth.types'
 
+// Kiểu response chung cho API đăng nhập giả
 type ApiResponse<T> = {
   success: boolean
   message: string
   data: T
 }
 
+// API giả mô phỏng đăng nhập theo tài khoản mẫu
 export const loginApi = async (data: LoginRequest): Promise<ApiResponse<User>> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {

@@ -1,35 +1,38 @@
-// TRANG LOGIN CHO CẢ 3 ROLE: STUDENT, INSTRUCTOR, ADMIN
 import { Card, Form, Input, Button, Typography, message } from 'antd'
 import { useMutation } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
+
 import { loginApi } from '../api/auth.api'
 import { useAuthStore } from '../store/auth.store'
-import { useNavigate } from 'react-router-dom'
 import logo from '../../../assets/stu-logo.png'
 
-const { Title, Text } = Typography
+const { Title, Text } = Typography // tách các component chữ để dùng trong giao diện đăng nhập
 
+// Trang đăng nhập chung cho cả 3 vai trò student instructor admin
 export default function LoginPage() {
-  const setUser = useAuthStore((s) => s.setUser)
-  const navigate = useNavigate()
+  const setUser = useAuthStore((state) => state.setUser) // lấy hàm lưu người dùng vào store
+  const navigate = useNavigate() // dùng để chuyển trang sau khi đăng nhập thành công
 
+  // Mutation này gọi API giả để kiểm tra đăng nhập
   const mutation = useMutation({
     mutationFn: loginApi,
     onSuccess: (res) => {
       if (res.success) {
-        setUser(res.data)
+        setUser(res.data) // lưu thông tin người dùng vào zustand store
 
-        if (res.data.role === 'student') navigate('/student/dashboard')
-        if (res.data.role === 'instructor') navigate('/instructor/dashboard')
-        if (res.data.role === 'admin') navigate('/admin/dashboard')
+        if (res.data.role === 'student') navigate('/student/dashboard') // chuyển sang dashboard sinh viên
+        if (res.data.role === 'instructor') navigate('/instructor/dashboard') // chuyển sang dashboard giảng viên
+        if (res.data.role === 'admin') navigate('/admin/dashboard') // chuyển sang dashboard admin
 
-        message.success(res.message)
+        message.success(res.message) // hiện thông báo đăng nhập thành công
       }
     },
     onError: (err: any) => {
-      message.error(err.message)
+      message.error(err.message) // hiện lỗi nếu tài khoản hoặc mật khẩu không đúng
     }
   })
 
+  // Hàm này chạy khi form submit thành công ở phía Ant Design
   const onFinish = (values: any) => {
     mutation.mutate(values)
   }
@@ -50,10 +53,10 @@ export default function LoginPage() {
           padding: 20,
           borderRadius: 12,
           boxShadow: '0 8px 30px rgba(0,0,0,0.08)',
-          textAlign: 'center' 
+          textAlign: 'center'
         }}
       >
-        {/* LOGO */}
+        {/* Khối logo trường */}
         <img
           src={logo}
           alt="STU"
@@ -64,7 +67,7 @@ export default function LoginPage() {
           }}
         />
 
-        {/* TITLE */}
+        {/* Tiêu đề chính của trang đăng nhập */}
         <Title
           style={{
             fontSize: 26,
@@ -76,7 +79,7 @@ export default function LoginPage() {
           Smart Feedback
         </Title>
 
-        {/* SUBTITLE */}
+        {/* Dòng mô tả ngắn của hệ thống */}
         <Text
           style={{
             fontSize: 14,
@@ -86,27 +89,25 @@ export default function LoginPage() {
           Teaching Quality Dashboard
         </Text>
 
-        {/* FORM */}
+        {/* Form nhập email và mật khẩu */}
         <Form
           layout="vertical"
-          style={{ marginTop: 20, textAlign: 'left' }} 
+          style={{ marginTop: 20, textAlign: 'left' }}
           onFinish={onFinish}
         >
-          {/* EMAIL */}
+          {/* Trường nhập email */}
           <Form.Item
             label="Email"
             name="email"
-            rules={
-              [
-                { type: 'email', message: 'Vui lòng nhập đúng định dạng email' },
-                { required: true, message: 'Vui lòng nhập email' }
-              ]
-            }
+            rules={[
+              { type: 'email', message: 'Vui lòng nhập đúng định dạng email' },
+              { required: true, message: 'Vui lòng nhập email' }
+            ]}
           >
             <Input placeholder="Nhập email..." />
           </Form.Item>
 
-          {/* PASSWORD */}
+          {/* Trường nhập mật khẩu */}
           <Form.Item
             label="Mật khẩu"
             name="password"
@@ -115,10 +116,10 @@ export default function LoginPage() {
             <Input.Password placeholder="Nhập mật khẩu..." />
           </Form.Item>
 
-          {/* BUTTON */}
+          {/* Nút gửi form đăng nhập */}
           <Button
             type="primary"
-            htmlType="submit" 
+            htmlType="submit"
             size="large"
             style={{ height: 44 }}
             loading={mutation.isPending}
@@ -127,7 +128,7 @@ export default function LoginPage() {
             Đăng nhập
           </Button>
 
-          {/* QUÊN MẬT KHẨU */}
+          {/* Liên kết quên mật khẩu tạm thời chỉ hiển thị thông báo */}
           <div style={{ marginTop: 14, textAlign: 'center' }}>
             <Text
               style={{

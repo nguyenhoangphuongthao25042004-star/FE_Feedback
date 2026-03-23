@@ -1,22 +1,24 @@
-﻿import { AppstoreOutlined, BookOutlined, BulbOutlined, CommentOutlined, HistoryOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from '@ant-design/icons' // các icon dùng cho menu
-import { Button, Menu } from 'antd' // component nút và menu của Ant Design
-import { useNavigate, useLocation } from 'react-router-dom' // hook điều hướng và lấy đường dẫn hiện tại
+import { AppstoreOutlined, BookOutlined, BulbOutlined, CommentOutlined, HistoryOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from '@ant-design/icons'
+import { Button, Menu } from 'antd'
+import { useLocation, useNavigate } from 'react-router-dom'
 
+// Kiểu props cho sidebar sinh viên
 type SidebarProps = {
   collapsed: boolean
-  onToggle: () => void // hàm đổi trạng thái thu gọn / mở rộng sidebar
-  showToggle?: boolean // cho phép ẩn nút toggle trong mobile
+  onToggle: () => void
+  showToggle?: boolean
 }
 
+// Sidebar điều hướng của module sinh viên
 export default function Sidebar({ collapsed, onToggle, showToggle = true }: SidebarProps) {
-  const nav = useNavigate() // dùng để chuyển trang khi bấm menu
-  const location = useLocation() // dùng để xác định menu đang được chọn
+  const nav = useNavigate() // dùng để điều hướng khi bấm menu
+  const location = useLocation() // lấy route hiện tại để đánh dấu mục đang chọn
 
   const selectedKey = location.pathname === '/student/recommendations'
     ? '/student/recommendations'
     : location.pathname
 
-  return ( // cấu trúc sidebar với phần header và menu items
+  return (
     <div
       style={{
         height: '100%',
@@ -38,7 +40,7 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
           gap: 12
         }}
       >
-        {!collapsed && <span>Smart Feedback</span>} {/* chỉ hiện tên hệ thống khi sidebar chưa thu gọn */}
+        {!collapsed && <span>Smart Feedback</span>}
 
         {showToggle && (
           <Button
@@ -60,8 +62,8 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
       <Menu
         mode="inline"
         inlineCollapsed={collapsed}
-        selectedKeys={[selectedKey]} // đánh dấu menu đang active theo đường dẫn hiện tại
-        onClick={(e) => nav(e.key)} // bấm menu nào thì điều hướng tới key của menu đó
+        selectedKeys={[selectedKey]}
+        onClick={(event) => nav(event.key)}
         style={{
           background: 'transparent',
           borderRight: 'none',

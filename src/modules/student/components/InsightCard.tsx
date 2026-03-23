@@ -1,17 +1,19 @@
-﻿import { Card } from 'antd'
+import { Card } from 'antd'
 import type { RecommendationData } from '../types/student.types'
 
+// Kiểu props cho card gợi ý học tập
 type Props = {
   data: RecommendationData
 }
 
-export default function InsightCard({ data }: Props) { 
-  const needImproveText = data.needImprove.join(', ') //join(', ') ghép các phần tử thành 1 chuỗi, cách nhau bằng dấu phẩy
-  const instructorText = data.suitableInstructors.join(', ')
+// Card hiển thị các gợi ý ngắn từ dữ liệu mock
+export default function InsightCard({ data }: Props) {
+  const needImproveText = data.needImprove.join(', ') // ghép danh sách môn cần chú ý thành một chuỗi
+  const instructorText = data.suitableInstructors.join(', ') // ghép danh sách giảng viên phù hợp thành một chuỗi
 
   return (
     <Card
-      title={'Gợi ý'}
+      title="Gợi ý"
       style={{
         borderRadius: 20,
         border: '1px solid #D7E1F0',
@@ -19,7 +21,7 @@ export default function InsightCard({ data }: Props) {
       }}
       bodyStyle={{ color: '#42546B' }}
     >
-      <p><strong>Môn phù hợp:</strong> {data.suitableSubjects || '-'}</p> {/* || '-' nghĩa là nếu không có dữ liệu thì hiện dấu - */}
+      <p><strong>Môn phù hợp:</strong> {data.suitableSubjects || '-'}</p>
       <p><strong>Môn cần chú ý:</strong> {needImproveText || '-'}</p>
       <p><strong>Giảng viên phù hợp:</strong> {instructorText || '-'}</p>
     </Card>

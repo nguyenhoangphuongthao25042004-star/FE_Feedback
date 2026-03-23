@@ -38,3 +38,13 @@
 .ant-menu-item .ant-menu-item-icon {
   font-size: 18px !important;
 }
+
+.feedback-confirm-checkbox .ant-checkbox-inner {
+  width: 18px !important;
+  height: 18px !important;
+  border-radius: 4px !important;
+}
+
+.feedback-confirm-checkbox .ant-checkbox {
+  align-self: flex-start;
+}
