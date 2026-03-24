@@ -20,11 +20,32 @@ export type StudyProfileItem = {
   value: number
 }
 
+// Mức ưu tiên cho gợi ý học tập
+export type RecommendationPriority = 'high' | 'medium' | 'low'
+
+// Trạng thái hoàn thành gợi ý
+export type RecommendationStatus = 'pending' | 'in_progress' | 'done'
+
+// Danh mục gợi ý
+export type RecommendationCategory = 'subject' | 'skill' | 'instructor' | 'study_method'
+
+// Một mục gợi ý học tập
+export type RecommendationItem = {
+  id: string
+  title: string
+  category: RecommendationCategory
+  priority: RecommendationPriority
+  description: string
+  actionLabel: string
+  status: RecommendationStatus
+}
+
 // Dữ liệu cho card gợi ý học tập
 export type RecommendationData = {
   suitableSubjects: string
   needImprove: string[]
   suitableInstructors: string[]
+  items: RecommendationItem[]
 }
 
 // Option dùng chung cho dropdown và radio

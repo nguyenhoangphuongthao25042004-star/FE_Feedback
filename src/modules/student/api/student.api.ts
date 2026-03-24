@@ -69,7 +69,45 @@ export const getRecommendations = async (): Promise<ApiSuccessResponse<Recommend
     data: {
       suitableSubjects: 'Xây dựng phần mềm web',
       needImprove: ['Xây dựng phần mềm thiết bị di động'],
-      suitableInstructors: ['Giảng viên A']
+      suitableInstructors: ['Giảng viên A'],
+      items: [
+        {
+          id: 'REC-01',
+          title: 'Ôn tập thêm môn Xây dựng phần mềm thiết bị di động',
+          category: 'subject',
+          priority: 'high',
+          description: 'Điểm phản hồi của môn này đang thấp hơn các môn còn lại và cần được củng cố thêm.',
+          actionLabel: 'Xem kế hoạch ôn tập',
+          status: 'pending'
+        },
+        {
+          id: 'REC-02',
+          title: 'Ưu tiên chọn học với Giảng viên A',
+          category: 'instructor',
+          priority: 'medium',
+          description: 'Kết quả phản hồi cho thấy phong cách giảng dạy phù hợp với xu hướng học tập của bạn.',
+          actionLabel: 'Xem chi tiết',
+          status: 'in_progress'
+        },
+        {
+          id: 'REC-03',
+          title: 'Tăng thời gian tự học mỗi tuần',
+          category: 'study_method',
+          priority: 'medium',
+          description: 'Nên duy trì ít nhất 8 đến 10 giờ tự học mỗi tuần để cải thiện độ ổn định.',
+          actionLabel: 'Đánh dấu đã xem',
+          status: 'done'
+        },
+        {
+          id: 'REC-04',
+          title: 'Phát triển kỹ năng làm việc nhóm',
+          category: 'skill',
+          priority: 'low',
+          description: 'Tham gia thêm các dự án nhóm để rèn luyện kỹ năng giao tiếp và hợp tác.',
+          actionLabel: 'Tìm dự án',
+          status: 'pending'
+        }
+      ]
     }
   }
 }
