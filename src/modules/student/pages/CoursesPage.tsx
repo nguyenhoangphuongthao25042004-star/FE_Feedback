@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { EyeOutlined } from '@ant-design/icons'
 import { Alert, Button, Card, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
@@ -30,11 +30,53 @@ export default function CoursesPage() {
   const navigate = useNavigate()
   const selectedSemester = useUiStore((state) => state.selectedSemester)
   const searchKeyword = useUiStore((state) => state.searchKeyword)
+  const [courseResultFilter, setCourseResultFilter] = useState<string | null>(null)
+  const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null)
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<string | null>(null)
+  const [courseScoreSortOrder, setCourseScoreSortOrder] = useState<string | null>(null)
+  const [instructorScoreSortOrder, setInstructorScoreSortOrder] = useState<string | null>(null)
 
-  const { data: courses = [], isLoading, isError, error, refetch } = useStudentCoursesQuery({
+  const { data: baseData = [], isLoading, isError, error, refetch } = useStudentCoursesQuery({
     semester: selectedSemester,
     keyword: searchKeyword
   })
+
+  const courses = useMemo(() => {
+    let result = [...baseData]
+
+    if (courseResultFilter) {
+      result = result.filter((course) => course.courseResult === courseResultFilter)
+    }
+
+    if (difficultyFilter) {
+      result = result.filter((course) => course.difficultyLevel === difficultyFilter)
+    }
+
+    if (feedbackStatusFilter) {
+      result = result.filter((course) => course.feedbackStatus === feedbackStatusFilter)
+    }
+
+    if (courseScoreSortOrder === 'asc') {
+      result.sort((a, b) => a.courseScore - b.courseScore)
+    } else if (courseScoreSortOrder === 'desc') {
+      result.sort((a, b) => b.courseScore - a.courseScore)
+    }
+
+    if (instructorScoreSortOrder === 'asc') {
+      result.sort((a, b) => a.instructorScore - b.instructorScore)
+    } else if (instructorScoreSortOrder === 'desc') {
+      result.sort((a, b) => b.instructorScore - a.instructorScore)
+    }
+
+    return result
+  }, [
+    baseData,
+    courseResultFilter,
+    difficultyFilter,
+    feedbackStatusFilter,
+    courseScoreSortOrder,
+    instructorScoreSortOrder
+  ])
 
   const columns: ColumnsType<Course> = useMemo(
     () => [
@@ -73,6 +115,12 @@ export default function CoursesPage() {
         dataIndex: 'courseResult',
         key: 'courseResult',
         align: 'center',
+        filters: [
+          { text: 'Đạt', value: 'pass' },
+          { text: 'Không đạt', value: 'fail' }
+        ],
+        filterMultiple: false,
+        filteredValue: courseResultFilter ? [courseResultFilter] : [],
         render: (value: Course['courseResult']) => (
           <Typography.Text style={{ color: '#163253', fontSize: 15 }}>
             {value === 'pass' ? 'Đạt' : 'Không đạt'}
@@ -84,6 +132,13 @@ export default function CoursesPage() {
         dataIndex: 'difficultyLevel',
         key: 'difficultyLevel',
         align: 'center',
+        filters: [
+          { text: 'Dễ', value: 'de' },
+          { text: 'Trung bình', value: 'trung-binh' },
+          { text: 'Khó', value: 'kho' }
+        ],
+        filterMultiple: false,
+        filteredValue: difficultyFilter ? [difficultyFilter] : [],
         render: (value: CourseDifficulty) => (
           <Tag
             style={{
@@ -104,6 +159,12 @@ export default function CoursesPage() {
         key: 'courseScore',
         align: 'center',
         width: 150,
+        filters: [
+          { text: 'Tăng dần', value: 'asc' },
+          { text: 'Giảm dần', value: 'desc' }
+        ],
+        filterMultiple: false,
+        filteredValue: courseScoreSortOrder ? [courseScoreSortOrder] : [],
         render: (value: number) => value.toFixed(1)
       },
       {
@@ -112,6 +173,12 @@ export default function CoursesPage() {
         key: 'instructorScore',
         align: 'center',
         width: 180,
+        filters: [
+          { text: 'Tăng dần', value: 'asc' },
+          { text: 'Giảm dần', value: 'desc' }
+        ],
+        filterMultiple: false,
+        filteredValue: instructorScoreSortOrder ? [instructorScoreSortOrder] : [],
         render: (value: number) => `${value.toFixed(1)}/5`
       },
       {
@@ -119,6 +186,13 @@ export default function CoursesPage() {
         dataIndex: 'feedbackStatus',
         key: 'feedbackStatus',
         align: 'center',
+        filters: [
+          { text: 'Đang học', value: 'dang-hoc' },
+          { text: 'Chưa phản hồi', value: 'chua-phan-hoi' },
+          { text: 'Đã phản hồi', value: 'da-phan-hoi' }
+        ],
+        filterMultiple: false,
+        filteredValue: feedbackStatusFilter ? [feedbackStatusFilter] : [],
         render: (value: Course['feedbackStatus']) => (
           <Tag
             style={{
@@ -148,7 +222,7 @@ export default function CoursesPage() {
         )
       }
     ],
-    [navigate]
+    [navigate, courseScoreSortOrder, instructorScoreSortOrder]
   )
 
   return (
@@ -211,6 +285,43 @@ export default function CoursesPage() {
           loading={isLoading}
           columns={columns}
           dataSource={courses}
+          onChange={(_, filters) => {
+            const courseResultFilters = filters.courseResult as string[] | null
+            const difficultyFilters = filters.difficultyLevel as string[] | null
+            const feedbackStatusFilters = filters.feedbackStatus as string[] | null
+            const courseScoreFilters = filters.courseScore as string[] | null
+            const instructorScoreFilters = filters.instructorScore as string[] | null
+
+            if (courseResultFilters && courseResultFilters.length > 0) {
+              setCourseResultFilter(courseResultFilters[0])
+            } else {
+              setCourseResultFilter(null)
+            }
+
+            if (difficultyFilters && difficultyFilters.length > 0) {
+              setDifficultyFilter(difficultyFilters[0])
+            } else {
+              setDifficultyFilter(null)
+            }
+
+            if (feedbackStatusFilters && feedbackStatusFilters.length > 0) {
+              setFeedbackStatusFilter(feedbackStatusFilters[0])
+            } else {
+              setFeedbackStatusFilter(null)
+            }
+            
+            if (courseScoreFilters && courseScoreFilters.length > 0) {
+              setCourseScoreSortOrder(courseScoreFilters[0])
+            } else {
+              setCourseScoreSortOrder(null)
+            }
+            
+            if (instructorScoreFilters && instructorScoreFilters.length > 0) {
+              setInstructorScoreSortOrder(instructorScoreFilters[0])
+            } else {
+              setInstructorScoreSortOrder(null)
+            }
+          }}
           pagination={{
             pageSize: 6,
             showSizeChanger: false

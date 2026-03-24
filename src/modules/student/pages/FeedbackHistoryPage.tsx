@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { Alert, Card, Space, Spin, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
@@ -17,6 +17,9 @@ const cardStyle = {
 export default function FeedbackHistoryPage() {
   const selectedSemester = useUiStore((state) => state.selectedSemester)
   const searchKeyword = useUiStore((state) => state.searchKeyword)
+  const [courseScoreSortOrder, setCourseScoreSortOrder] = useState<string | null>(null)
+  const [instructorScoreSortOrder, setInstructorScoreSortOrder] = useState<string | null>(null)
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<string | null>(null)
   const { data, isLoading, isError, error } = useFeedbackHistoryQuery()
 
   const tableData = useMemo(() => {
@@ -27,15 +30,40 @@ export default function FeedbackHistoryPage() {
       ? rows
       : rows.filter((item) => item.semester === selectedSemester)
 
-    if (normalizedKeyword.length === 0) {
-      return filteredBySemester
+    const filteredByKeyword = normalizedKeyword.length === 0
+      ? filteredBySemester
+      : filteredBySemester.filter((item) => (
+        item.subject.toLowerCase().includes(normalizedKeyword)
+        || item.instructor.toLowerCase().includes(normalizedKeyword)
+      ))
+
+    let result = [...filteredByKeyword]
+
+    if (feedbackStatusFilter) {
+      result = result.filter((item) => item.status === feedbackStatusFilter)
     }
 
-    return filteredBySemester.filter((item) => (
-      item.subject.toLowerCase().includes(normalizedKeyword)
-      || item.instructor.toLowerCase().includes(normalizedKeyword)
-    ))
-  }, [data?.data, searchKeyword, selectedSemester])
+    if (courseScoreSortOrder === 'asc') {
+      result.sort((a, b) => a.courseOverallScore - b.courseOverallScore)
+    } else if (courseScoreSortOrder === 'desc') {
+      result.sort((a, b) => b.courseOverallScore - a.courseOverallScore)
+    }
+
+    if (instructorScoreSortOrder === 'asc') {
+      result.sort((a, b) => a.instructorOverallScore - b.instructorOverallScore)
+    } else if (instructorScoreSortOrder === 'desc') {
+      result.sort((a, b) => b.instructorOverallScore - a.instructorOverallScore)
+    }
+
+    return result
+  }, [
+    data?.data,
+    searchKeyword,
+    selectedSemester,
+    feedbackStatusFilter,
+    courseScoreSortOrder,
+    instructorScoreSortOrder
+  ])
 
   const columns: ColumnsType<FeedbackHistory> = [
     {
@@ -63,6 +91,12 @@ export default function FeedbackHistoryPage() {
       dataIndex: 'courseOverallScore',
       key: 'courseOverallScore',
       align: 'center',
+      filters: [
+        { text: 'Tăng dần', value: 'asc' },
+        { text: 'Giảm dần', value: 'desc' }
+      ],
+      filterMultiple: false,
+      filteredValue: courseScoreSortOrder ? [courseScoreSortOrder] : [],
       render: (value: number) => `${value.toFixed(1)}/5`
     },
     {
@@ -70,6 +104,12 @@ export default function FeedbackHistoryPage() {
       dataIndex: 'instructorOverallScore',
       key: 'instructorOverallScore',
       align: 'center',
+      filters: [
+        { text: 'Tăng dần', value: 'asc' },
+        { text: 'Giảm dần', value: 'desc' }
+      ],
+      filterMultiple: false,
+      filteredValue: instructorScoreSortOrder ? [instructorScoreSortOrder] : [],
       render: (value: number) => `${value.toFixed(1)}/5`
     },
     {
@@ -77,8 +117,27 @@ export default function FeedbackHistoryPage() {
       dataIndex: 'status',
       key: 'status',
       align: 'center',
+      filters: [
+        { text: 'Đã phản hồi', value: 'submitted' },
+        { text: 'Chưa phản hồi', value: 'draft' }
+      ],
+      filterMultiple: false,
+      filteredValue: feedbackStatusFilter ? [feedbackStatusFilter] : [],
       render: (value: FeedbackHistory['status']) => (
-        <Tag color={value === 'submitted' ? 'green' : 'default'}>
+        <Tag
+          style={
+            value === 'submitted'
+              ? undefined
+              : {
+                background: '#FFF7E6',
+                color: '#D48806',
+                borderColor: '#FFD591',
+                borderRadius: 999,
+                paddingInline: 12
+              }
+          }
+          color={value === 'submitted' ? 'green' : undefined}
+        >
           {value === 'submitted' ? 'Đã phản hồi' : 'Chưa phản hồi'}
         </Tag>
       )
@@ -128,6 +187,29 @@ export default function FeedbackHistoryPage() {
             rowKey="id"
             columns={columns}
             dataSource={tableData}
+            onChange={(_, filters) => {
+              const courseScoreFilters = filters.courseOverallScore as string[] | null
+              const instructorScoreFilters = filters.instructorOverallScore as string[] | null
+              const feedbackStatusFilters = filters.status as string[] | null
+
+              if (courseScoreFilters && courseScoreFilters.length > 0) {
+                setCourseScoreSortOrder(courseScoreFilters[0])
+              } else {
+                setCourseScoreSortOrder(null)
+              }
+
+              if (instructorScoreFilters && instructorScoreFilters.length > 0) {
+                setInstructorScoreSortOrder(instructorScoreFilters[0])
+              } else {
+                setInstructorScoreSortOrder(null)
+              }
+
+              if (feedbackStatusFilters && feedbackStatusFilters.length > 0) {
+                setFeedbackStatusFilter(feedbackStatusFilters[0])
+              } else {
+                setFeedbackStatusFilter(null)
+              }
+            }}
             pagination={{ pageSize: 6, showSizeChanger: false }}
           />
         )}

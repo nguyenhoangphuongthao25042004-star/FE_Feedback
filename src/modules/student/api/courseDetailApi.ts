@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
 import type { CourseDetailData } from '../types/courseDetail'
+import { mockCourses } from './courseApi'
 
 type CourseDetailApiResponse = {
   success: boolean
@@ -103,9 +104,29 @@ const mockCourseDetails: Record<string, CourseDetailData> = {
 
 const getFallbackDetail = (courseId: string): CourseDetailData => {
   const normalizedId = courseId.toUpperCase()
+  const matchedCourse = mockCourses.find((course) => course.id.toUpperCase() === normalizedId)
 
   if (mockCourseDetails[normalizedId]) {
     return mockCourseDetails[normalizedId]
+  }
+
+  if (matchedCourse) {
+    return {
+      ...mockCourseDetails.SE104,
+      header: {
+        courseId: matchedCourse.id,
+        subjectName: matchedCourse.subject,
+        semester: matchedCourse.semester,
+        instructor: matchedCourse.instructor,
+        status: matchedCourse.feedbackStatus
+      },
+      kpis: {
+        ...mockCourseDetails.SE104.kpis,
+        overallCourseScore: matchedCourse.courseScore,
+        instructorScore: matchedCourse.instructorScore,
+        difficultyLevel: matchedCourse.difficultyLevel
+      }
+    }
   }
 
   return {

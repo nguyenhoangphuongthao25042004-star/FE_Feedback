@@ -36,6 +36,15 @@ const baseCardStyle = {
 	boxShadow: '0 12px 28px rgba(0, 45, 109, 0.08)'
 } as const
 
+const metaChipStyle = {
+	background: '#F4F8FF',
+	border: '1px solid #D6E4F7',
+	borderRadius: 999,
+	padding: '6px 12px',
+	display: 'inline-flex',
+	alignItems: 'center'
+} as const
+
 const statusStyleMap: Record<CourseDetailStatus, { label: string, bg: string, color: string, border: string }> = {
 	'dang-hoc': { label: 'Đang học', bg: '#E8F1FF', color: '#2F5E9E', border: '#D5E6FF' },
 	'da-phan-hoi': { label: 'Đã phản hồi', bg: '#EAF7EE', color: '#389E0D', border: '#D1F0DC' },
@@ -142,7 +151,7 @@ export default function CourseDetailPage() {
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 			<Card style={baseCardStyle}>
-				<div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+				<div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
 					<Button
 						shape="circle"
 						size="large"
@@ -171,12 +180,16 @@ export default function CourseDetailPage() {
 							wrap
 							style={{ rowGap: 10 }}
 						>
-							<Typography.Text style={{ color: '#42546B', fontSize: 16, lineHeight: 1.4 }}>
-								Học kỳ: <strong>{data.header.semester}</strong>
-							</Typography.Text>
-							<Typography.Text style={{ color: '#42546B', fontSize: 16, lineHeight: 1.4 }}>
-								Giảng viên: <strong>{data.header.instructor}</strong>
-							</Typography.Text>
+							<span style={metaChipStyle}>
+								<Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.4 }}>
+									Học kỳ: <strong style={{ color: '#163253' }}>{data.header.semester}</strong>
+								</Typography.Text>
+							</span>
+							<span style={metaChipStyle}>
+								<Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.4 }}>
+									Giảng viên: <strong style={{ color: '#163253' }}>{data.header.instructor}</strong>
+								</Typography.Text>
+							</span>
 							<Tag
 								style={{
 									background: statusStyle.bg,

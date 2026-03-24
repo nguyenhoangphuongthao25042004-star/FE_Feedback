@@ -15,7 +15,7 @@ type CourseQueryParams = {
 
 const COURSE_ENDPOINT = '/api/student/courses'
 
-const mockCourses: Course[] = [
+export const mockCourses: Course[] = [
   {
     id: 'SE104',
     semester: '2025-2026-HK2',

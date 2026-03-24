@@ -1,5 +1,6 @@
 import { Avatar, Badge, Button, Input, Select, Space, Typography } from 'antd'
 import { BellOutlined, MenuOutlined } from '@ant-design/icons'
+import { useLocation } from 'react-router-dom'
 
 import logo from '../../assets/STU-topbar.png'
 import collapsedLogo from '../../assets/stu-logo.png'
@@ -19,19 +20,20 @@ type TopbarProps = {
 
 // Danh sách học kỳ cho bộ chọn chung trên topbar
 const semesterOptions = [
-  { value: '2025-2026-HK2', label: '2025 - 2026 - Học Kì 2' },
-  { value: '2025-2026-HK1', label: '2025 - 2026 - Học Kì 1' },
-  { value: 'all', label: 'Tất cả học kì' }
+  { value: '2025-2026-HK2', label: '2025 - 2026 - Học kỳ 2' },
+  { value: '2025-2026-HK1', label: '2025 - 2026 - Học kỳ 1' }
 ]
 
 // Topbar này dùng chung cho layout sinh viên và đọc dữ liệu từ store
 export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collapsed = false, onMenuClick }: TopbarProps) {
+  const location = useLocation()
   const user = useAuthStore((state) => state.user) // lấy người dùng đang đăng nhập để hiển thị avatar
   const selectedSemester = useUiStore((state) => state.selectedSemester) // lấy học kỳ đang được chọn ở topbar
   const searchKeyword = useUiStore((state) => state.searchKeyword) // lấy từ khóa tìm kiếm đang dùng chung
   const setSelectedSemester = useUiStore((state) => state.setSelectedSemester) // hàm cập nhật học kỳ trên store
-  const setSearchKeyword = useUiStore((state) => state.setSearchKeyword) // hàm cập nhật ô tìm kiếm trên store
+  const setSearchKeyword = useUiStore((state) => state.setSearchKeyword) // hàm cập nhật từ khóa tìm kiếm
   const avatarLabel = user?.name?.trim().charAt(0).toUpperCase() || 'SV' // lấy chữ cái đầu của tên người dùng cho avatar
+  const shouldShowSearch = location.pathname === '/student/courses' || location.pathname === '/student/history'
 
   // Giao diện topbar cho mobile
   if (isMobile) {
@@ -71,15 +73,37 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           </Text>
         </Space>
 
-        <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3' }}>
+        <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
           <Select
             aria-label="Chọn học kỳ"
             value={selectedSemester}
             onChange={setSelectedSemester}
-            style={{ width: '100%' }}
+            style={{ flex: 1 }}
             size="large"
             options={semesterOptions}
           />
+
+          <Button
+            type="text"
+            aria-label="Thông báo"
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: 12,
+              border: '1px solid #C4D3EA',
+              color: '#42546B',
+              flexShrink: 0
+            }}
+            icon={(
+              <Badge count={3} size="small">
+                <BellOutlined style={{ fontSize: 18, color: '#42546B' }} />
+              </Badge>
+            )}
+          />
+
+          <Avatar style={{ backgroundColor: '#004286', minWidth: 44, height: 44, lineHeight: '44px', flexShrink: 0 }}>
+            {avatarLabel}
+          </Avatar>
         </div>
       </div>
     )
@@ -95,7 +119,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           alignItems: 'center',
           height: '100%',
           background: '#FFFFFF',
-          padding: '0 4px',
+          padding: '0 16px',
           gap: 16
         }}
       >
@@ -117,29 +141,31 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           </Text>
         </Space>
 
-        <Space size="middle" style={{ flexShrink: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <Select
             aria-label="Chọn học kỳ"
             value={selectedSemester}
             onChange={setSelectedSemester}
-            style={{ width: 280 }}
+            style={{ width: 220 }}
             size="large"
             options={semesterOptions}
           />
 
-          <Input
-            aria-label="Tìm kiếm"
-            placeholder="Tìm môn học hoặc giảng viên"
-            value={searchKeyword}
-            onChange={(event) => setSearchKeyword(event.target.value)}
-            style={{
-              width: 180,
-              height: 44,
-              borderRadius: 999,
-              background: '#F4F7FC',
-              borderColor: '#C4D3EA'
-            }}
-          />
+          {shouldShowSearch && (
+            <Input
+              aria-label="Tìm kiếm"
+              placeholder="Tìm môn học hoặc giảng viên"
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
+              style={{
+                width: 200,
+                height: 44,
+                borderRadius: 999,
+                background: '#F4F7FC',
+                borderColor: '#C4D3EA'
+              }}
+            />
+          )}
 
           <Button
             type="text"
@@ -161,7 +187,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           <Avatar style={{ backgroundColor: '#004286', minWidth: 44, height: 44, lineHeight: '44px' }}>
             {avatarLabel}
           </Avatar>
-        </Space>
+        </div>
       </div>
     )
   }
@@ -171,12 +197,12 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
     <div
       style={{
         display: 'grid',
-        gridTemplateColumns: `${sidebarWidth}px minmax(0, 1fr)`,
+        gridTemplateColumns: `${sidebarWidth}px minmax(0, 1fr) auto`,
         alignItems: 'center',
         height: '100%',
         background: '#FFFFFF',
-        padding: '0 24px 0 0',
-        gap: 0
+        padding: '0 16px 0 0',
+        gap: 32
       }}
     >
       <div
@@ -206,14 +232,15 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           display: 'flex',
           alignItems: 'center',
           minWidth: 0,
-          paddingLeft: 48,
-          gap: 32
+          paddingLeft: 20
         }}
       >
         <Text strong style={{ fontSize: 18, color: '#1C3D66', whiteSpace: 'nowrap', flexShrink: 0 }}>
           Smart Feedback - Teaching Quality Dashboard
         </Text>
+      </div>
 
+      <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
         <Select
           aria-label="Chọn học kỳ"
           value={selectedSemester}
@@ -223,19 +250,21 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           options={semesterOptions}
         />
 
-        <Input
-          aria-label="Tìm kiếm"
-          placeholder="Tìm môn học hoặc giảng viên"
-          value={searchKeyword}
-          onChange={(event) => setSearchKeyword(event.target.value)}
-          style={{
-            width: 360,
-            height: 44,
-            borderRadius: 999,
-            background: '#F4F7FC',
-            borderColor: '#C4D3EA'
-          }}
-        />
+        {shouldShowSearch && (
+          <Input
+            aria-label="Tìm kiếm"
+            placeholder="Tìm môn học hoặc giảng viên"
+            value={searchKeyword}
+            onChange={(event) => setSearchKeyword(event.target.value)}
+            style={{
+              width: 360,
+              height: 44,
+              borderRadius: 999,
+              background: '#F4F7FC',
+              borderColor: '#C4D3EA'
+            }}
+          />
+        )}
 
         <Button
           type="text"
