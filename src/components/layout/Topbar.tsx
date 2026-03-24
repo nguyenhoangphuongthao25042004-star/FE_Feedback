@@ -19,8 +19,9 @@ type TopbarProps = {
 
 // Danh sách học kỳ cho bộ chọn chung trên topbar
 const semesterOptions = [
-  { value: '2025-2026-HK2', label: '2025 - 2026 - Học kỳ 2' },
-  { value: '2025-2026-HK1', label: '2025 - 2026 - Học kỳ 1' }
+  { value: '2025-2026-HK2', label: '2025 - 2026 - Học Kì 2' },
+  { value: '2025-2026-HK1', label: '2025 - 2026 - Học Kì 1' },
+  { value: 'all', label: 'Tất cả học kì' }
 ]
 
 // Topbar này dùng chung cho layout sinh viên và đọc dữ liệu từ store
@@ -128,7 +129,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
 
           <Input
             aria-label="Tìm kiếm"
-            placeholder="Tìm kiếm..."
+            placeholder="Tìm môn học hoặc giảng viên"
             value={searchKeyword}
             onChange={(event) => setSearchKeyword(event.target.value)}
             style={{
@@ -224,7 +225,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
 
         <Input
           aria-label="Tìm kiếm"
-          placeholder="Tìm kiếm..."
+          placeholder="Tìm môn học hoặc giảng viên"
           value={searchKeyword}
           onChange={(event) => setSearchKeyword(event.target.value)}
           style={{

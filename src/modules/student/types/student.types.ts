@@ -116,6 +116,21 @@ export type FeedbackHistoryItem = {
   status: string
 }
 
+// Trạng thái phản hồi trên màn lịch sử phản hồi
+export type FeedbackHistoryStatus = 'submitted' | 'draft'
+
+// Kiểu dữ liệu cho một bản ghi lịch sử phản hồi
+export interface FeedbackHistory {
+  id: string
+  semester: string
+  submittedAt: string
+  subject: string
+  instructor: string
+  courseOverallScore: number
+  instructorOverallScore: number
+  status: FeedbackHistoryStatus
+}
+
 // Kiểu dữ liệu cho object lỗi trả từ API
 export type ApiResponseErrorMap = Record<string, string>
 

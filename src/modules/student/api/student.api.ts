@@ -1,6 +1,9 @@
+import { useQuery } from '@tanstack/react-query'
+
 import type {
   ApiSuccessResponse,
   DashboardData,
+  FeedbackHistory,
   FeedbackMetadata,
   FeedbackSubmitPayload,
   RecommendationData,
@@ -198,4 +201,197 @@ export const submitFeedback = async (
     message: payload.status === 'draft' ? 'Đã lưu nháp phản hồi thành công' : 'Đã gửi phản hồi thành công',
     data: {}
   }
+}
+
+const mockFeedbackHistory: FeedbackHistory[] = [
+  {
+    id: 'FH-001',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-03-18',
+    subject: 'Xây dựng phần mềm web',
+    instructor: 'Nguyễn Văn A',
+    courseOverallScore: 4.5,
+    instructorOverallScore: 4.6,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-002',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-03-12',
+    subject: 'AI cơ bản và ứng dụng',
+    instructor: 'Trần Thị B',
+    courseOverallScore: 4.1,
+    instructorOverallScore: 4.0,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-003',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-03-10',
+    subject: 'Xây dựng phần mềm thiết bị di động',
+    instructor: 'Lê Văn C',
+    courseOverallScore: 3.8,
+    instructorOverallScore: 3.7,
+    status: 'draft'
+  },
+  {
+    id: 'FH-004',
+    semester: '2025-2026-HK1',
+    submittedAt: '2025-12-22',
+    subject: 'Thực tập tốt nghiệp',
+    instructor: 'Phạm Thị D',
+    courseOverallScore: 4.7,
+    instructorOverallScore: 4.8,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-005',
+    semester: '2025-2026-HK1',
+    submittedAt: '2025-12-14',
+    subject: 'Kiểm thử phần mềm',
+    instructor: 'Ngô Minh Tâm',
+    courseOverallScore: 4.3,
+    instructorOverallScore: 4.2,
+    status: 'draft'
+  },
+  {
+    id: 'FH-006',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-03-08',
+    subject: 'Phân tích thiết kế hệ thống',
+    instructor: 'Vũ Thị Lan',
+    courseOverallScore: 4.0,
+    instructorOverallScore: 4.1,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-007',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-03-04',
+    subject: 'Cơ sở dữ liệu nâng cao',
+    instructor: 'Đặng Quốc Huy',
+    courseOverallScore: 3.9,
+    instructorOverallScore: 4.0,
+    status: 'draft'
+  },
+  {
+    id: 'FH-008',
+    semester: '2025-2026-HK1',
+    submittedAt: '2025-12-08',
+    subject: 'An toàn và bảo mật thông tin',
+    instructor: 'Phan Minh Khoa',
+    courseOverallScore: 4.4,
+    instructorOverallScore: 4.5,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-009',
+    semester: '2025-2026-HK1',
+    submittedAt: '2025-12-03',
+    subject: 'Mạng máy tính',
+    instructor: 'Bùi Gia Hân',
+    courseOverallScore: 3.7,
+    instructorOverallScore: 3.8,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-010',
+    semester: '2024-2025-HK2',
+    submittedAt: '2025-05-18',
+    subject: 'Nhập môn trí tuệ nhân tạo',
+    instructor: 'Trần Nhật Quang',
+    courseOverallScore: 4.2,
+    instructorOverallScore: 4.3,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-011',
+    semester: '2024-2025-HK2',
+    submittedAt: '2025-05-10',
+    subject: 'Thiết kế giao diện người dùng',
+    instructor: 'Mai Thu Hà',
+    courseOverallScore: 4.6,
+    instructorOverallScore: 4.7,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-012',
+    semester: '2024-2025-HK1',
+    submittedAt: '2024-12-26',
+    subject: 'Lập trình hướng đối tượng',
+    instructor: 'Nguyễn Phước An',
+    courseOverallScore: 4.1,
+    instructorOverallScore: 4.0,
+    status: 'draft'
+  },
+  {
+    id: 'FH-013',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-02-27',
+    subject: 'Kỹ nghệ phần mềm',
+    instructor: 'Hoàng Gia Bảo',
+    courseOverallScore: 4.2,
+    instructorOverallScore: 4.3,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-014',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-02-22',
+    subject: 'Quản lý dự án phần mềm',
+    instructor: 'Lý Thanh Hà',
+    courseOverallScore: 3.9,
+    instructorOverallScore: 4.0,
+    status: 'draft'
+  },
+  {
+    id: 'FH-015',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-02-16',
+    subject: 'Kiến trúc phần mềm',
+    instructor: 'Phạm Đức Minh',
+    courseOverallScore: 4.4,
+    instructorOverallScore: 4.5,
+    status: 'submitted'
+  },
+  {
+    id: 'FH-016',
+    semester: '2025-2026-HK2',
+    submittedAt: '2026-02-08',
+    subject: 'Đảm bảo chất lượng phần mềm',
+    instructor: 'Nguyễn Khánh Linh',
+    courseOverallScore: 3.8,
+    instructorOverallScore: 3.9,
+    status: 'draft'
+  }
+]
+
+// Lấy lịch sử phản hồi của sinh viên
+export const getFeedbackHistory = async (): Promise<ApiSuccessResponse<FeedbackHistory[]>> => {
+  try {
+    const response = await fetch('/api/student/feedback-history', { method: 'GET' })
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch feedback history')
+    }
+
+    return (await response.json()) as ApiSuccessResponse<FeedbackHistory[]>
+  } catch {
+    await wait(350)
+
+    return {
+      success: true,
+      message: 'OK',
+      data: mockFeedbackHistory
+    }
+  }
+}
+
+// Hook query cho màn lịch sử phản hồi
+export const useFeedbackHistoryQuery = () => {
+  return useQuery({
+    queryKey: ['student-feedback-history'],
+    queryFn: getFeedbackHistory,
+    staleTime: 60 * 1000
+  })
 }
