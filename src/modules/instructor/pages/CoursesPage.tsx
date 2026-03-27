@@ -219,22 +219,17 @@ export default function CoursesPage() {
         >
           Danh sách môn giảng dạy
         </Typography.Title>
-        <Typography.Text
-          style={{
-            marginTop: 10,
-            display: 'inline-block',
-            color: '#42546B',
-            fontSize: 16,
-            lineHeight: 1.6
-          }}
+
+        <Space
+          direction="horizontal"
+          size={12}
+          style={{ width: '100%', justifyContent: 'flex-end', marginTop: -15, marginBottom: -8 }}
         >
-          Theo dõi nhanh kết quả học tập và phản hồi của sinh viên theo từng môn học bạn phụ trách
-        </Typography.Text>
-        <Space direction="horizontal" size={12} style={{ width: '100%', justifyContent: 'flex-start', gap: 16, marginTop: 16 }}>
           <Select
             placeholder="Trạng thái"
             allowClear
-            style={{ width: 180 }}
+            size="large"
+            style={{ width: 450, maxWidth: '100%', fontSize: 16 }}
             value={statusFilterSelect ?? undefined}
             onChange={(val) => setStatusFilterSelect(val ?? null)}
             options={[
@@ -243,11 +238,19 @@ export default function CoursesPage() {
               { label: 'Đã phản hồi', value: 'da-phan-hoi' }
             ]}
           />
-
-          {/* Topbar provides the instructor-only course-name search; page-level search removed to avoid duplication */}
         </Space>
-      
-        
+
+        <Typography.Text
+          style={{
+            marginTop: -22,
+            display: 'inline-block',
+            color: '#42546B',
+            fontSize: 16,
+            lineHeight: 1.6
+          }}
+        >
+          Theo dõi nhanh kết quả học tập và phản hồi của sinh viên theo từng môn học bạn phụ trách
+        </Typography.Text>
       </Card>
 
       {isError && (
@@ -300,13 +303,13 @@ export default function CoursesPage() {
             } else {
               setFeedbackStatusFilter(null)
             }
-            
+
             if (courseScoreFilters && courseScoreFilters.length > 0) {
               setCourseScoreSortOrder(courseScoreFilters[0])
             } else {
               setCourseScoreSortOrder(null)
             }
-            
+
             if (instructorScoreFilters && instructorScoreFilters.length > 0) {
               setInstructorScoreSortOrder(instructorScoreFilters[0])
             } else {

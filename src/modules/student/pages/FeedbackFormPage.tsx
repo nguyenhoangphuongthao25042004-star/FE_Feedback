@@ -342,24 +342,24 @@ export default function FeedbackFormPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-      <div style={cardStyle}>
-        <PageHeader
-          title="Biểu mẫu phản hồi"
-          description="Điền phản hồi cho đúng môn học và giảng viên đã được chọn từ danh sách môn học của bạn."
-          extra={(
-            viewMode
-              ? (
-                <Space>
-                  <Button icon={<ArrowLeftOutlined />} size="large" onClick={() => navigate('/student/history')}>
-                    Quay lại
-                  </Button>
-                </Space>
-              )
-              : (
+      {/* header cố định khi cuộn */}
+      <div style={{ position: 'sticky', top: 88, zIndex: 30 }}>
+        <div style={cardStyle}>
+          <PageHeader
+            title="Biểu mẫu phản hồi"
+            description="Điền phản hồi cho đúng môn học và giảng viên đã được chọn từ danh sách môn học của bạn."
+            prefix={(
+              <Button
+                icon={<ArrowLeftOutlined />}
+                onClick={() => navigate('/student/feedback/new')}
+                shape="circle"
+                size="large"
+                style={{ borderRadius: 999, width: 44, height: 44, minWidth: 44 }}
+              />
+            )}
+            extra={
+              !viewMode ? (
                 <Space wrap>
-                  <Button icon={<ArrowLeftOutlined />} size="large" onClick={() => navigate('/student/feedback/new')}>
-                    Quay lại danh sách
-                  </Button>
                   <Button icon={<SaveOutlined />} size="large" onClick={handleSaveDraft}>
                     Lưu nháp
                   </Button>
@@ -370,108 +370,112 @@ export default function FeedbackFormPage() {
                     Làm lại
                   </Button>
                 </Space>
-              )
-          )}
-        />
+              ) : null
+            }
+          />
+        </div>
       </div>
 
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={emptyValues}
-        style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
-      >
-        <SurveySectionCard title="Section 1 - Thông tin chung" description="Các thông tin học kỳ, môn học và giảng viên đã được cố định theo môn bạn vừa chọn.">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}>
-              <Form.Item name="semester" hidden rules={[{ required: true, message: 'Vui lòng chọn học kỳ' }]}>
-                <Input />
-              </Form.Item>
-              <Form.Item label="Học kỳ" required>
-                <Input value={semesterDisplayValue} readOnly size="large" style={readonlyInputStyle} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="subject" label="Môn học" rules={[{ required: true, message: 'Vui lòng chọn môn học' }]}>
-                <Input readOnly size="large" style={readonlyInputStyle} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item name="instructor" label="Giảng viên" rules={[{ required: true, message: 'Vui lòng chọn giảng viên' }]}>
-                <Input readOnly size="large" style={readonlyInputStyle} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}><DropdownField name="courseResult" label="Kết quả môn học" options={metadata.courseResults} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><DropdownField name="difficultyLevel" label="Mức độ khó môn" options={metadata.difficultyLevels} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><DropdownField name="latestGpa" label="GPA gần nhất" options={metadata.gpaOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><DropdownField name="outstandingSubjects" label="Số môn nợ" options={metadata.outstandingSubjectsOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><DropdownField name="selfStudyHours" label="Số giờ tự học / tuần" options={metadata.selfStudyHourOptions} required disabled={viewMode} /></Col>
-          </Row>
-        </SurveySectionCard>
+      {/* chỉ phần form cuộn được */}
+      <div style={{ maxHeight: 'calc(100vh - 240px)', overflow: 'auto', paddingRight: 8 }}>
+        <Form
+          form={form}
+          layout="vertical"
+          initialValues={emptyValues}
+          style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+        >
+          <SurveySectionCard title="Section 1 - Thông tin chung" description="Các thông tin học kỳ, môn học và giảng viên đã được cố định theo môn bạn vừa chọn.">
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}>
+                <Form.Item name="semester" hidden rules={[{ required: true, message: 'Vui lòng chọn học kỳ' }]}>
+                  <Input />
+                </Form.Item>
+                <Form.Item label="Học kỳ" required>
+                  <Input value={semesterDisplayValue} readOnly size="large" style={readonlyInputStyle} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item name="subject" label="Môn học" rules={[{ required: true, message: 'Vui lòng chọn môn học' }]}>
+                  <Input readOnly size="large" style={readonlyInputStyle} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}>
+                <Form.Item name="instructor" label="Giảng viên" rules={[{ required: true, message: 'Vui lòng chọn giảng viên' }]}>
+                  <Input readOnly size="large" style={readonlyInputStyle} />
+                </Form.Item>
+              </Col>
+              <Col xs={24} md={12}><DropdownField name="courseResult" label="Kết quả môn học" options={metadata.courseResults} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><DropdownField name="difficultyLevel" label="Mức độ khó môn" options={metadata.difficultyLevels} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><DropdownField name="latestGpa" label="GPA gần nhất" options={metadata.gpaOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><DropdownField name="outstandingSubjects" label="Số môn nợ" options={metadata.outstandingSubjectsOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><DropdownField name="selfStudyHours" label="Số giờ tự học / tuần" options={metadata.selfStudyHourOptions} required disabled={viewMode} /></Col>
+            </Row>
+          </SurveySectionCard>
 
-        <SurveySectionCard title="Section 2 - Đánh giá môn học và giảng viên" description="Hiển thị từng câu hỏi Likert 1 đến 5 theo dạng hàng">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {metadata.likertQuestions.map((question: FeedbackMetadata['likertQuestions'][number]) => (
-              <LikertQuestion key={question.key} name={['likertAnswers', question.key]} label={question.label} options={metadata.likertScaleOptions} disabled={viewMode} />
-            ))}
-          </div>
-        </SurveySectionCard>
+          <SurveySectionCard title="Section 2 - Đánh giá môn học và giảng viên" description="Hiển thị từng câu hỏi Likert 1 đến 5 theo dạng hàng">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {metadata.likertQuestions.map((question: FeedbackMetadata['likertQuestions'][number]) => (
+                <LikertQuestion key={question.key} name={['likertAnswers', question.key]} label={question.label} options={metadata.likertScaleOptions} disabled={viewMode} />
+              ))}
+            </div>
+          </SurveySectionCard>
 
-        <SurveySectionCard title="Section 3 - Phong cách học tập" description="Phản ánh cách học phù hợp của sinh viên">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}><RadioGroupField name="studyTime" label="Học tốt vào sáng chiều tối" options={metadata.studyTimeOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="learningPreference" label="Thích học lý thuyết thực hành cân bằng" options={metadata.learningPreferenceOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="modePreference" label="Thích học trực tiếp online cả hai" options={metadata.modePreferenceOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="studyMode" label="Học một mình / học nhóm" options={metadata.studyModeOptions} required disabled={viewMode} /></Col>
-          </Row>
-        </SurveySectionCard>
+          <SurveySectionCard title="Section 3 - Phong cách học tập" description="Phản ánh cách học phù hợp của sinh viên">
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}><RadioGroupField name="studyTime" label="Học tốt vào sáng chiều tối" options={metadata.studyTimeOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><RadioGroupField name="learningPreference" label="Thích học lý thuyết thực hành cân bằng" options={metadata.learningPreferenceOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><RadioGroupField name="modePreference" label="Thích học trực tiếp online cả hai" options={metadata.modePreferenceOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><RadioGroupField name="studyMode" label="Học một mình / học nhóm" options={metadata.studyModeOptions} required disabled={viewMode} /></Col>
+            </Row>
+          </SurveySectionCard>
 
-        <SurveySectionCard title="Section 4 - Câu hỏi mở" description="Các câu hỏi mở dùng để thu thập thêm ý kiến phản hồi từ sinh viên">
-          <Row gutter={[16, 16]}>
-            <Col xs={24}><TextAreaField name="lecturerSupport" label="Điều giảng viên có thể làm để bạn học tốt hơn" required disabled={viewMode} /></Col>
-            <Col xs={24}><TextAreaField name="mainDifficulty" label="Khó khăn chính khiến bạn dễ rớt môn" required disabled={viewMode} /></Col>
-            <Col xs={24}><DropdownField name="attendanceRate" label="Tỉ lệ tham gia lớp" options={metadata.attendanceRateOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="homeworkBeforeClass" label="Thường làm bài tập trước khi đến lớp?" options={metadata.homeworkOptions} required disabled={viewMode} /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="requirementLevel" label="Môn yêu cầu nhiều toán / logic / coding?" options={metadata.requirementLevelOptions} required disabled={viewMode} /></Col>
-            <Col xs={24}>
-              <Form.Item
-                name="attentionCheck"
-                label="Xác nhận đọc kỹ câu hỏi"
-                valuePropName="checked"
-                rules={[{
-                  validator: (_, value) => value
-                    ? Promise.resolve()
-                    : Promise.reject(new Error('Vui lòng xác nhận bạn đã đọc kỹ câu hỏi'))
-                }]}
-              >
-                <label
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 10,
-                    cursor: 'pointer',
-                    color: '#163253'
-                  }}
+          <SurveySectionCard title="Section 4 - Câu hỏi mở" description="Các câu hỏi mở dùng để thu thập thêm ý kiến phản hồi từ sinh viên">
+            <Row gutter={[16, 16]}>
+              <Col xs={24}><TextAreaField name="lecturerSupport" label="Điều giảng viên có thể làm để bạn học tốt hơn" required disabled={viewMode} /></Col>
+              <Col xs={24}><TextAreaField name="mainDifficulty" label="Khó khăn chính khiến bạn dễ rớt môn" required disabled={viewMode} /></Col>
+              <Col xs={24}><DropdownField name="attendanceRate" label="Tỉ lệ tham gia lớp" options={metadata.attendanceRateOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><RadioGroupField name="homeworkBeforeClass" label="Thường làm bài tập trước khi đến lớp?" options={metadata.homeworkOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><RadioGroupField name="requirementLevel" label="Môn yêu cầu nhiều toán / logic / coding?" options={metadata.requirementLevelOptions} required disabled={viewMode} /></Col>
+              <Col xs={24}>
+                <Form.Item
+                  name="attentionCheck"
+                  label="Xác nhận đọc kỹ câu hỏi"
+                  valuePropName="checked"
+                  rules={[{
+                    validator: (_, value) => value
+                      ? Promise.resolve()
+                      : Promise.reject(new Error('Vui lòng xác nhận bạn đã đọc kỹ câu hỏi'))
+                  }]}
                 >
-                  <input
-                    type="checkbox"
-                    checked={attentionChecked}
-                    disabled={viewMode}
-                    onChange={(event) => form.setFieldValue('attentionCheck', event.target.checked)}
+                  <label
                     style={{
-                      width: 18,
-                      height: 18,
-                      accentColor: '#004286',
-                      cursor: viewMode ? 'default' : 'pointer'
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      cursor: 'pointer',
+                      color: '#163253'
                     }}
-                  />
-                  <span>Tôi đã đọc kỹ câu hỏi</span>
-                </label>
-              </Form.Item>
-            </Col>
-          </Row>
-        </SurveySectionCard>
-      </Form>
+                  >
+                    <input
+                      type="checkbox"
+                      checked={attentionChecked}
+                      disabled={viewMode}
+                      onChange={(event) => form.setFieldValue('attentionCheck', event.target.checked)}
+                      style={{
+                        width: 18,
+                        height: 18,
+                        accentColor: '#004286',
+                        cursor: viewMode ? 'default' : 'pointer'
+                      }}
+                    />
+                    <span>Tôi đã đọc kỹ câu hỏi</span>
+                  </label>
+                </Form.Item>
+              </Col>
+            </Row>
+          </SurveySectionCard>
+        </Form>
+      </div>
 
       {mutation.isError && <Alert type="error" showIcon message="Không thể gửi phản hồi" description="Vui lòng thử lại sau" />}
     </div>
