@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react'
-import { Alert, Card, Space, Spin, Table, Tag, Typography } from 'antd'
+import { useNavigate } from 'react-router-dom'
+import { Alert, Button, Card, Space, Spin, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 
 import { useFeedbackHistoryQuery } from '../api/student.api'
 import { useUiStore } from '../../../stores/ui.store'
 import type { FeedbackHistory } from '../types/student.types'
+import { EyeOutlined } from '@ant-design/icons'
 
 const cardStyle = {
   borderRadius: 8,
@@ -21,6 +23,7 @@ export default function FeedbackHistoryPage() {
   const [instructorScoreSortOrder, setInstructorScoreSortOrder] = useState<string | null>(null)
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<string | null>(null)
   const { data, isLoading, isError, error } = useFeedbackHistoryQuery()
+  const navigate = useNavigate()
 
   const tableData = useMemo(() => {
     const rows = data?.data ?? []
@@ -142,7 +145,28 @@ export default function FeedbackHistoryPage() {
         </Tag>
       )
     }
+    ,{
+      title: 'Hành động',
+      key: 'actions',
+      align: 'center',
+      width: 160,
+      render: (_value: unknown, record: FeedbackHistory) => (
+        <Button
+          icon={<EyeOutlined />}
+          onClick={() => handleView(record)}
+          style={{ borderRadius: 999 }}
+        >
+          Xem chi tiết
+        </Button>
+      )
+    }
   ]
+
+  const handleView = (item: FeedbackHistory) => {
+    // Navigate to the feedback form in read-only view mode
+    if (!item.courseId) return
+    navigate(`/student/history/view/${item.courseId}`)
+  }
 
   return (
     <div style={{ background: '#EEF3FB', display: 'flex', flexDirection: 'column', gap: 20 }}>

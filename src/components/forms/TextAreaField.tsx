@@ -10,13 +10,14 @@ type TextAreaFieldProps = {
   placeholder?: string
   rows?: number
   required?: boolean
+  disabled?: boolean
 }
 
 // Component textarea dùng chung cho các câu hỏi mở
-export default function TextAreaField({ name, label, placeholder, rows = 4, required = false }: TextAreaFieldProps) {
+export default function TextAreaField({ name, label, placeholder, rows = 4, required = false, disabled = false }: TextAreaFieldProps) {
   return (
     <Form.Item name={name} label={label} rules={required ? [{ required: true, message: `Vui lòng nhập ${label.toLowerCase()}` }] : undefined}>
-      <TextArea rows={rows} placeholder={placeholder ?? `Nhập ${label.toLowerCase()}...`} />
+      <TextArea rows={rows} placeholder={placeholder ?? `Nhập ${label.toLowerCase()}...`} disabled={disabled} />
     </Form.Item>
   )
 }

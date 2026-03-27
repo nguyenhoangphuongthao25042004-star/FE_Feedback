@@ -37,7 +37,8 @@ const mockProfile: StudyProfileItem[] = [
 const mockRecommend: RecommendationData = {
   suitableSubjects: 'Xây dựng phần mềm web',
   needImprove: ['Xây dựng phần mềm thiết bị di động'],
-  suitableInstructors: ['Giảng viên A']
+  suitableInstructors: ['Giảng viên A'],
+  items: []
 }
 
 // Style dùng lại cho card trạng thái và khối header

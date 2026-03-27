@@ -8,10 +8,11 @@ type LikertQuestionProps = {
   name: NamePath
   label: string
   options: Array<{ label: string; value: string }>
+  disabled?: boolean
 }
 
 // Component hiển thị 1 câu hỏi với thang đo Likert
-export default function LikertQuestion({ name, label, options }: LikertQuestionProps) {
+export default function LikertQuestion({ name, label, options, disabled = false }: LikertQuestionProps) {
   return (
     <Row gutter={[12, 12]} align="middle" style={{ border: '1px solid #D7E1F0', borderRadius: 18, padding: '16px', background: '#FFFFFF' }}>
       <Col xs={24} lg={10}>
@@ -19,9 +20,9 @@ export default function LikertQuestion({ name, label, options }: LikertQuestionP
       </Col>
       <Col xs={24} lg={14}>
         <Form.Item name={name} rules={[{ required: true, message: `Vui lòng chọn mức đánh giá cho câu: ${label}` }]} style={{ marginBottom: 0 }}>
-          <Radio.Group style={{ width: '100%' }}>
+          <Radio.Group style={{ width: '100%' }} disabled={disabled}>
             <Space size="large" wrap>
-              {options.map((option) => <Radio key={option.value} value={Number(option.value)}>{option.label}</Radio>)}
+              {options.map((option) => <Radio key={option.value} value={Number(option.value)} disabled={disabled}>{option.label}</Radio>)}
             </Space>
           </Radio.Group>
         </Form.Item>

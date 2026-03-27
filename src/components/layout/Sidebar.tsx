@@ -1,4 +1,4 @@
-import { AppstoreOutlined, BookOutlined, BulbOutlined, CommentOutlined, HistoryOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, BookOutlined, BulbOutlined, CommentOutlined, HistoryOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, BarChartOutlined, LineChartOutlined } from '@ant-design/icons'
 import { Button, Menu } from 'antd'
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -14,9 +14,8 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
   const nav = useNavigate() // dùng để điều hướng khi bấm menu
   const location = useLocation() // lấy route hiện tại để đánh dấu mục đang chọn
 
-  const selectedKey = location.pathname === '/student/recommendations'
-    ? '/student/recommendations'
-    : location.pathname
+  const isInstructor = location.pathname.startsWith('/instructor')
+  const selectedKey = location.pathname
 
   return (
     <div
@@ -70,7 +69,14 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
           flex: 1,
           paddingTop: 8
         }}
-        items={[
+        items={isInstructor ? [
+          { key: '/instructor/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },
+          { key: '/instructor/courses', icon: <BookOutlined />, label: 'Danh sách môn giảng dạy' },
+          { key: '/instructor/quality', icon: <BarChartOutlined />, label: 'Chỉ số chất lượng' },
+          { key: '/instructor/feedback', icon: <CommentOutlined />, label: 'Phản hồi sinh viên' },
+          { key: '/instructor/trends', icon: <LineChartOutlined />, label: 'Xu hướng theo kỳ' },
+          { key: '/instructor/recommendations', icon: <BulbOutlined />, label: 'Khuyến nghị cải tiến' }
+        ] : [
           { key: '/student/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },
           { key: '/student/feedback/new', icon: <CommentOutlined />, label: 'Gửi phản hồi' },
           { key: '/student/courses', icon: <BookOutlined />, label: 'Môn học của tôi' },

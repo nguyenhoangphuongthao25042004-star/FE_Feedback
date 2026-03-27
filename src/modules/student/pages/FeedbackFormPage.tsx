@@ -22,6 +22,7 @@ import {
 } from '@ant-design/icons'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useFeedbackSubmissionQuery } from '../api/student.api'
 
 import PageHeader from '../../../components/layout/PageHeader'
 import SurveySectionCard from '../../../components/forms/SurveySectionCard'
@@ -76,6 +77,7 @@ export default function FeedbackFormPage() {
   const selectedSemester = useUiStore((state) => state.selectedSemester)
   const searchKeyword = useUiStore((state) => state.searchKeyword)
   const selectedCourseId = searchParams.get('courseId')
+  const viewMode = Boolean(searchParams.get('view'))
 
   const metadataQuery = useQuery({
     queryKey: ['feedback-form-metadata'],
@@ -97,6 +99,7 @@ export default function FeedbackFormPage() {
     [allCoursesQuery.data, selectedCourseId]
   )
   const isCourseLocked = selectedCourse?.feedbackStatus === 'da-phan-hoi'
+  const submissionQuery = useFeedbackSubmissionQuery(viewMode ? selectedCourseId ?? undefined : undefined)
 
   const fixedFieldValues = useMemo(() => {
     if (!selectedCourse) return null
@@ -128,18 +131,34 @@ export default function FeedbackFormPage() {
   useEffect(() => {
     if (!selectedCourseId || !selectedCourse || !fixedFieldValues) return
 
+    // If we're viewing a submitted feedback, the submissionQuery will set the form values instead.
+    if (viewMode) return
+
     form.resetFields()
     form.setFieldsValue({
       ...emptyValues,
       ...fixedFieldValues
     })
-  }, [form, selectedCourse?.id, selectedCourseId])
+  }, [form, selectedCourse?.id, selectedCourseId, fixedFieldValues, selectedCourse, viewMode])
+
+  // When in view mode and a saved submission exists, populate the form with the saved answers
+  useEffect(() => {
+    if (!viewMode || !submissionQuery.data?.data) return
+
+    const payload = submissionQuery.data.data
+    form.resetFields()
+    form.setFieldsValue({
+      ...emptyValues,
+      ...fixedFieldValues,
+      ...payload
+    })
+  }, [viewMode, submissionQuery.data, fixedFieldValues, form])
 
   useEffect(() => {
-    if (!selectedCourseId || !isCourseLocked) return
+    if (!selectedCourseId || !isCourseLocked || viewMode) return
 
     navigate('/student/feedback/new', { replace: true })
-  }, [isCourseLocked, navigate, selectedCourseId])
+  }, [isCourseLocked, navigate, selectedCourseId, viewMode])
 
   const handleSaveDraft = async () => {
     if (!selectedCourse) return
@@ -154,8 +173,10 @@ export default function FeedbackFormPage() {
       await form.validateFields()
       const values = { ...emptyValues, ...form.getFieldsValue(true), ...fixedFieldValues }
       await mutation.mutateAsync({ ...values, status: 'submitted', courseId: selectedCourse.id })
-    } catch (errorInfo: any) {
-      const firstIssue = errorInfo?.errorFields?.[0]
+    } catch (errorInfo: unknown) {
+      // validation error from antd form
+  const err = errorInfo as { errorFields?: Array<{ name?: unknown }> }
+      const firstIssue = err?.errorFields?.[0]
 
       if (firstIssue?.name) {
         form.scrollToField(firstIssue.name, { behavior: 'smooth', block: 'center' })
@@ -227,6 +248,10 @@ export default function FeedbackFormPage() {
   ], [navigate])
 
   if (metadataQuery.isLoading || (selectedCourseId && allCoursesQuery.isLoading)) {
+    return <LoadingSpinner />
+  }
+
+  if (viewMode && submissionQuery.isLoading) {
     return <LoadingSpinner />
   }
 
@@ -322,20 +347,30 @@ export default function FeedbackFormPage() {
           title="Biểu mẫu phản hồi"
           description="Điền phản hồi cho đúng môn học và giảng viên đã được chọn từ danh sách môn học của bạn."
           extra={(
-            <Space wrap>
-              <Button icon={<ArrowLeftOutlined />} size="large" onClick={() => navigate('/student/feedback/new')}>
-                Quay lại danh sách
-              </Button>
-              <Button icon={<SaveOutlined />} size="large" onClick={handleSaveDraft}>
-                Lưu nháp
-              </Button>
-              <SubmitButton loading={mutation.isPending} onClick={handleSubmit}>
-                <Space size={8}><SendOutlined /><span>Gửi phản hồi</span></Space>
-              </SubmitButton>
-              <Button icon={<ReloadOutlined />} size="large" onClick={handleReset}>
-                Làm lại
-              </Button>
-            </Space>
+            viewMode
+              ? (
+                <Space>
+                  <Button icon={<ArrowLeftOutlined />} size="large" onClick={() => navigate('/student/history')}>
+                    Quay lại
+                  </Button>
+                </Space>
+              )
+              : (
+                <Space wrap>
+                  <Button icon={<ArrowLeftOutlined />} size="large" onClick={() => navigate('/student/feedback/new')}>
+                    Quay lại danh sách
+                  </Button>
+                  <Button icon={<SaveOutlined />} size="large" onClick={handleSaveDraft}>
+                    Lưu nháp
+                  </Button>
+                  <SubmitButton loading={mutation.isPending} onClick={handleSubmit}>
+                    <Space size={8}><SendOutlined /><span>Gửi phản hồi</span></Space>
+                  </SubmitButton>
+                  <Button icon={<ReloadOutlined />} size="large" onClick={handleReset}>
+                    Làm lại
+                  </Button>
+                </Space>
+              )
           )}
         />
       </div>
@@ -366,38 +401,38 @@ export default function FeedbackFormPage() {
                 <Input readOnly size="large" style={readonlyInputStyle} />
               </Form.Item>
             </Col>
-            <Col xs={24} md={12}><DropdownField name="courseResult" label="Kết quả môn học" options={metadata.courseResults} required /></Col>
-            <Col xs={24} md={12}><DropdownField name="difficultyLevel" label="Mức độ khó môn" options={metadata.difficultyLevels} required /></Col>
-            <Col xs={24} md={12}><DropdownField name="latestGpa" label="GPA gần nhất" options={metadata.gpaOptions} required /></Col>
-            <Col xs={24} md={12}><DropdownField name="outstandingSubjects" label="Số môn nợ" options={metadata.outstandingSubjectsOptions} required /></Col>
-            <Col xs={24} md={12}><DropdownField name="selfStudyHours" label="Số giờ tự học / tuần" options={metadata.selfStudyHourOptions} required /></Col>
+            <Col xs={24} md={12}><DropdownField name="courseResult" label="Kết quả môn học" options={metadata.courseResults} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><DropdownField name="difficultyLevel" label="Mức độ khó môn" options={metadata.difficultyLevels} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><DropdownField name="latestGpa" label="GPA gần nhất" options={metadata.gpaOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><DropdownField name="outstandingSubjects" label="Số môn nợ" options={metadata.outstandingSubjectsOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><DropdownField name="selfStudyHours" label="Số giờ tự học / tuần" options={metadata.selfStudyHourOptions} required disabled={viewMode} /></Col>
           </Row>
         </SurveySectionCard>
 
         <SurveySectionCard title="Section 2 - Đánh giá môn học và giảng viên" description="Hiển thị từng câu hỏi Likert 1 đến 5 theo dạng hàng">
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {metadata.likertQuestions.map((question: FeedbackMetadata['likertQuestions'][number]) => (
-              <LikertQuestion key={question.key} name={['likertAnswers', question.key]} label={question.label} options={metadata.likertScaleOptions} />
+              <LikertQuestion key={question.key} name={['likertAnswers', question.key]} label={question.label} options={metadata.likertScaleOptions} disabled={viewMode} />
             ))}
           </div>
         </SurveySectionCard>
 
         <SurveySectionCard title="Section 3 - Phong cách học tập" description="Phản ánh cách học phù hợp của sinh viên">
           <Row gutter={[16, 16]}>
-            <Col xs={24} md={12}><RadioGroupField name="studyTime" label="Học tốt vào sáng chiều tối" options={metadata.studyTimeOptions} required /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="learningPreference" label="Thích học lý thuyết thực hành cân bằng" options={metadata.learningPreferenceOptions} required /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="modePreference" label="Thích học trực tiếp online cả hai" options={metadata.modePreferenceOptions} required /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="studyMode" label="Học một mình / học nhóm" options={metadata.studyModeOptions} required /></Col>
+            <Col xs={24} md={12}><RadioGroupField name="studyTime" label="Học tốt vào sáng chiều tối" options={metadata.studyTimeOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><RadioGroupField name="learningPreference" label="Thích học lý thuyết thực hành cân bằng" options={metadata.learningPreferenceOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><RadioGroupField name="modePreference" label="Thích học trực tiếp online cả hai" options={metadata.modePreferenceOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><RadioGroupField name="studyMode" label="Học một mình / học nhóm" options={metadata.studyModeOptions} required disabled={viewMode} /></Col>
           </Row>
         </SurveySectionCard>
 
         <SurveySectionCard title="Section 4 - Câu hỏi mở" description="Các câu hỏi mở dùng để thu thập thêm ý kiến phản hồi từ sinh viên">
           <Row gutter={[16, 16]}>
-            <Col xs={24}><TextAreaField name="lecturerSupport" label="Điều giảng viên có thể làm để bạn học tốt hơn" required /></Col>
-            <Col xs={24}><TextAreaField name="mainDifficulty" label="Khó khăn chính khiến bạn dễ rớt môn" required /></Col>
-            <Col xs={24}><DropdownField name="attendanceRate" label="Tỉ lệ tham gia lớp" options={metadata.attendanceRateOptions} required /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="homeworkBeforeClass" label="Thường làm bài tập trước khi đến lớp?" options={metadata.homeworkOptions} required /></Col>
-            <Col xs={24} md={12}><RadioGroupField name="requirementLevel" label="Môn yêu cầu nhiều toán / logic / coding?" options={metadata.requirementLevelOptions} required /></Col>
+            <Col xs={24}><TextAreaField name="lecturerSupport" label="Điều giảng viên có thể làm để bạn học tốt hơn" required disabled={viewMode} /></Col>
+            <Col xs={24}><TextAreaField name="mainDifficulty" label="Khó khăn chính khiến bạn dễ rớt môn" required disabled={viewMode} /></Col>
+            <Col xs={24}><DropdownField name="attendanceRate" label="Tỉ lệ tham gia lớp" options={metadata.attendanceRateOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><RadioGroupField name="homeworkBeforeClass" label="Thường làm bài tập trước khi đến lớp?" options={metadata.homeworkOptions} required disabled={viewMode} /></Col>
+            <Col xs={24} md={12}><RadioGroupField name="requirementLevel" label="Môn yêu cầu nhiều toán / logic / coding?" options={metadata.requirementLevelOptions} required disabled={viewMode} /></Col>
             <Col xs={24}>
               <Form.Item
                 name="attentionCheck"
@@ -421,12 +456,13 @@ export default function FeedbackFormPage() {
                   <input
                     type="checkbox"
                     checked={attentionChecked}
+                    disabled={viewMode}
                     onChange={(event) => form.setFieldValue('attentionCheck', event.target.checked)}
                     style={{
                       width: 18,
                       height: 18,
                       accentColor: '#004286',
-                      cursor: 'pointer'
+                      cursor: viewMode ? 'default' : 'pointer'
                     }}
                   />
                   <span>Tôi đã đọc kỹ câu hỏi</span>

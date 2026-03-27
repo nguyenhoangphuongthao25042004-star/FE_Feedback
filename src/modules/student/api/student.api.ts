@@ -20,6 +20,7 @@ const slugify = (value: string) => value
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/^-+|-+$/g, '')
+import { getStudentFeedbackSubmissionByCourseId } from './feedbackData'
 
 export const getDashboard = async (): Promise<ApiSuccessResponse<DashboardData>> => {
   await wait(300)
@@ -273,6 +274,37 @@ export const useFeedbackHistoryQuery = () => {
   return useQuery({
     queryKey: ['student-feedback-history'],
     queryFn: getFeedbackHistory,
+    staleTime: 60 * 1000
+  })
+}
+
+export const getFeedbackSubmission = async (courseId: string): Promise<ApiSuccessResponse<FeedbackSubmitPayload | null>> => {
+  try {
+    // network path omitted in this demo; try to fetch from local storage fallback
+    await wait(200)
+    const submission = getStudentFeedbackSubmissionByCourseId(courseId)
+
+    return {
+      success: true,
+      message: 'OK',
+      data: submission ?? null
+    }
+  } catch {
+    await wait(200)
+
+    return {
+      success: true,
+      message: 'OK',
+      data: getStudentFeedbackSubmissionByCourseId(courseId) ?? null
+    }
+  }
+}
+
+export const useFeedbackSubmissionQuery = (courseId?: string) => {
+  return useQuery({
+    queryKey: ['feedback-submission', courseId],
+    queryFn: () => getFeedbackSubmission(courseId ?? ''),
+    enabled: Boolean(courseId),
     staleTime: 60 * 1000
   })
 }

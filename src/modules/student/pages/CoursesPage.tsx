@@ -222,7 +222,7 @@ export default function CoursesPage() {
         )
       }
     ],
-    [navigate, courseScoreSortOrder, instructorScoreSortOrder]
+    [navigate, courseScoreSortOrder, instructorScoreSortOrder, courseResultFilter, difficultyFilter, feedbackStatusFilter]
   )
 
   return (

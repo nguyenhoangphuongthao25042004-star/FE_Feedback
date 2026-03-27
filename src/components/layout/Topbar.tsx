@@ -153,7 +153,8 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
   const resetFilters = useUiStore((state) => state.resetFilters)
   const [notifications, setNotifications] = useState<NotificationItem[]>(() => normalizeNotifications(readStoredNotifications()))
   const avatarLabel = user?.name?.trim().charAt(0).toUpperCase() || 'U'
-  const shouldShowSearch = location.pathname === '/student/courses' || location.pathname === '/student/history'
+  // Show the topbar search for student course listings/history and the instructor courses list
+  const shouldShowSearch = location.pathname === '/student/courses' || location.pathname === '/student/history' || location.pathname === '/instructor/courses'
 
   useEffect(() => {
     const syncNotifications = () => {
@@ -494,7 +495,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           {shouldShowSearch && (
             <Input
               aria-label="Tìm kiếm"
-              placeholder="Tìm môn học hoặc giảng viên"
+              placeholder={location.pathname === '/instructor/courses' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
               value={searchKeyword}
               onChange={(event) => setSearchKeyword(event.target.value)}
               style={{
@@ -574,7 +575,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
         {shouldShowSearch && (
           <Input
             aria-label="Tìm kiếm"
-            placeholder="Tìm môn học hoặc giảng viên"
+            placeholder={location.pathname === '/instructor/courses' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
             value={searchKeyword}
             onChange={(event) => setSearchKeyword(event.target.value)}
             style={{

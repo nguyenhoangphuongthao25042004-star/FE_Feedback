@@ -8,37 +8,42 @@ type PageHeaderProps = {
   title: string
   description?: string
   extra?: ReactNode
+  prefix?: ReactNode
 }
 
 // Header đầu trang có tiêu đề mô tả và vùng action bên phải
-export default function PageHeader({ title, description, extra }: PageHeaderProps) {
+export default function PageHeader({ title, description, extra, prefix }: PageHeaderProps) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
-      <Space direction="vertical" size={4}>
-        <Title
-          level={1}
-          style={{
-            margin: 0,
-            color: '#163253',
-            fontSize: 32,
-            fontWeight: 800,
-            letterSpacing: 0.4
-          }}
-        >
-          {title}
-        </Title>
-        {description && (
-          <Text
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* optional prefix (e.g. back button) */}
+  {prefix}
+        <Space direction="vertical" size={4}>
+          <Title
+            level={1}
             style={{
-              color: '#42546B',
-              fontSize: 16,
-              lineHeight: 1.6
+              margin: 0,
+              color: '#163253',
+              fontSize: 32,
+              fontWeight: 800,
+              letterSpacing: 0.4
             }}
           >
-            {description}
-          </Text>
-        )}
-      </Space>
+            {title}
+          </Title>
+          {description && (
+            <Text
+              style={{
+                color: '#42546B',
+                fontSize: 16,
+                lineHeight: 1.6
+              }}
+            >
+              {description}
+            </Text>
+          )}
+        </Space>
+      </div>
       {extra}
     </div>
   )

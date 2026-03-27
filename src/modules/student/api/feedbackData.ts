@@ -241,6 +241,7 @@ const historyDateByCourseId: Record<string, string> = {
 type FeedbackWorkflowState = {
   courses: Course[]
   history: FeedbackHistory[]
+  submissions?: Record<string, FeedbackSubmitPayload>
 }
 
 const STORAGE_KEY = 'smart-feedback-student-workflow-v4'
@@ -293,9 +294,58 @@ const createHistoryFromCourses = (courses: Course[]): FeedbackHistory[] => {
 const createDefaultState = (): FeedbackWorkflowState => {
   const courses = cloneCourses()
 
+  const history = createHistoryFromCourses(courses)
+
+  // create default submission payloads for courses that are marked as 'da-phan-hoi'
+  const submissions: Record<string, FeedbackSubmitPayload> = {}
+
+  const createDefaultSubmission = (course: Course): FeedbackSubmitPayload => {
+    const likertKeys = [...instructorQuestionKeys, ...courseQuestionKeys]
+    const likertAnswers: FeedbackLikertAnswers = {}
+
+    likertKeys.forEach((key) => {
+      if (instructorQuestionKeys.includes(key)) {
+        likertAnswers[key] = Math.max(1, Math.min(5, Math.round(course.instructorScore)))
+      } else {
+        // course score is on 0-10 in sample data; map to 1-5
+        likertAnswers[key] = Math.max(1, Math.min(5, Math.round(course.courseScore / 2)))
+      }
+    })
+
+    return {
+      semester: course.semester,
+      subject: course.subject,
+      instructor: course.instructor,
+      courseResult: course.courseResult ?? '',
+      difficultyLevel: course.difficultyLevel ?? '',
+      latestGpa: '',
+      outstandingSubjects: '',
+      selfStudyHours: '',
+      likertAnswers,
+      studyTime: '',
+      learningPreference: '',
+      modePreference: '',
+      studyMode: '',
+      lecturerSupport: '',
+      mainDifficulty: '',
+      attentionCheck: true,
+      status: 'submitted',
+      attendanceRate: '',
+      homeworkBeforeClass: '',
+      requirementLevel: ''
+    }
+  }
+
+  courses.forEach((course) => {
+    if (course.feedbackStatus === 'da-phan-hoi') {
+      submissions[course.id] = createDefaultSubmission(course)
+    }
+  })
+
   return {
     courses,
-    history: createHistoryFromCourses(courses)
+    history,
+    submissions
   }
 }
 
@@ -305,7 +355,8 @@ const isValidState = (value: unknown): value is FeedbackWorkflowState => {
   if (!value || typeof value !== 'object') return false
 
   const candidate = value as FeedbackWorkflowState
-  return Array.isArray(candidate.courses) && Array.isArray(candidate.history)
+  const submissionsOk = candidate.submissions === undefined || typeof candidate.submissions === 'object'
+  return Array.isArray(candidate.courses) && Array.isArray(candidate.history) && submissionsOk
 }
 
 export const getFeedbackWorkflowState = (): FeedbackWorkflowState => {
@@ -328,9 +379,12 @@ export const getFeedbackWorkflowState = (): FeedbackWorkflowState => {
       return fallback
     }
 
+    const candidate = parsedValue as FeedbackWorkflowState
+
     return {
-      courses: parsedValue.courses.map((course) => ({ ...course })),
-      history: parsedValue.history.map((item) => ({ ...item }))
+      courses: candidate.courses.map((course) => ({ ...course })),
+      history: candidate.history.map((item) => ({ ...item })),
+      submissions: candidate.submissions ?? {}
     }
   } catch {
     return fallback
@@ -349,6 +403,11 @@ export const getStudentFeedbackHistory = () => getFeedbackWorkflowState().histor
 
 export const getStudentFeedbackCourseById = (courseId: string) => {
   return getFeedbackWorkflowState().courses.find((course) => course.id === courseId)
+}
+
+export const getStudentFeedbackSubmissionByCourseId = (courseId: string) => {
+  const state = getFeedbackWorkflowState()
+  return state.submissions ? state.submissions[courseId] ?? null : null
 }
 
 export const upsertFeedbackSubmission = (payload: FeedbackSubmitPayload & { courseId: string }) => {
@@ -385,6 +444,11 @@ export const upsertFeedbackSubmission = (payload: FeedbackSubmitPayload & { cour
   const nextState = {
     courses: nextCourses,
     history: nextHistory
+    ,
+    submissions: {
+      ...(state.submissions ?? {}),
+      [payload.courseId]: payload
+    }
   }
 
   saveFeedbackWorkflowState(nextState)
