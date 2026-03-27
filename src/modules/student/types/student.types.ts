@@ -143,6 +143,7 @@ export type FeedbackHistoryStatus = 'submitted' | 'draft'
 // Kiểu dữ liệu cho một bản ghi lịch sử phản hồi
 export interface FeedbackHistory {
   id: string
+  courseId?: string
   semester: string
   submittedAt: string
   subject: string
