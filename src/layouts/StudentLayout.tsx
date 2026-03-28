@@ -22,7 +22,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const headerHeight = isMobile ? 112 : 72 // header mobile cao hơn để đủ chỗ 2 hàng
   const [collapsed, setCollapsed] = useState(false) // trạng thái thu gọn sidebar
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false) // trạng thái mở drawer trên mobile
-  const sidebarWidth = collapsed ? 88 : 220 // tính chiều rộng sidebar để chừa khoảng content
+  const sidebarWidth = collapsed ? 88 : 280 // tăng thêm để hiển thị đủ nhãn menu dài
 
   // Tự điều chỉnh sidebar theo từng breakpoint
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     <Layout style={{ minHeight: '100vh', background: '#EEF3FB' }}>
       {!isMobile && (
         <Sider
-          width={220}
+          width={280}
           collapsed={collapsed}
           collapsedWidth={88}
           trigger={null}

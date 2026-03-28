@@ -10,7 +10,7 @@ import type { FeedbackHistory } from '../types/student.types'
 import { EyeOutlined } from '@ant-design/icons'
 
 const cardStyle = {
-  borderRadius: 8,
+  borderRadius: 20,
   border: '1px solid #D7E1F0',
   background: '#FFFFFF',
   boxShadow: '0 8px 20px rgba(0, 45, 109, 0.08)'

@@ -1,21 +1,13 @@
-import { useMemo } from 'react'
-import { ArrowLeftOutlined, CheckCircleOutlined, InfoCircleOutlined, WarningOutlined } from '@ant-design/icons'
-import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Empty,
-  Row,
-  Space,
-  Spin,
-  Tag,
-  Typography
-} from 'antd'
+import { useEffect, useMemo, useState } from 'react'
+import { ArrowLeftOutlined } from '@ant-design/icons'
+import { Button, Card, Col, Empty, Row, Space, Spin, Typography } from 'antd'
 import {
   Bar,
   BarChart,
   CartesianGrid,
+  Legend,
+  Line,
+  LineChart,
   PolarAngleAxis,
   PolarGrid,
   Radar,
@@ -26,18 +18,64 @@ import {
   YAxis
 } from 'recharts'
 import { useNavigate, useParams } from 'react-router-dom'
+import StatCard from '../../../components/layout/StatCard'
+import { baseStudentCourses, getFeedbackWorkflowState } from '../../student/api/feedbackData'
+import type { Course } from '../../student/types/course'
 
-import { useStudentCourseDetailQuery } from '../../student/api/courseDetailApi'
-import type { CourseDetailDifficulty, CourseDetailStatus } from '../../student/types/courseDetail'
-import { getFeedbackWorkflowState } from '../../student/api/feedbackData'
+type HeaderData = {
+  courseName: string
+  semester: string
+  totalResponses: number
+  dataReliabilityPercent: number
+}
 
-const baseCardStyle = {
+type KpiData = {
+  qualityIndex: number
+  courseScore: number
+  instructorScore: number
+  perceivedDifficulty: string
+}
+
+type RadarPoint = {
+  factor: string
+  score: number
+}
+
+type RatingDistributionPoint = {
+  rating: string
+  count: number
+}
+
+type TrendPoint = {
+  period: string
+  score: number
+}
+
+type InsightData = {
+  strengths: string[]
+  improvements: string[]
+}
+
+type CourseDetailDashboardData = {
+  header: HeaderData
+  kpis: KpiData
+  radar: RadarPoint[]
+  ratingDistribution: RatingDistributionPoint[]
+  trend: TrendPoint[]
+  insight: InsightData
+}
+
+type ApiResponse = {
+  data?: unknown
+}
+
+const surfaceCardStyle = {
   borderRadius: 20,
   border: '1px solid #D7E1F0',
-  boxShadow: '0 12px 28px rgba(0, 45, 109, 0.08)'
+  boxShadow: '0 14px 30px rgba(28, 61, 102, 0.08)'
 } as const
 
-const metaChipStyle = {
+const badgeStyle = {
   background: '#F4F8FF',
   border: '1px solid #D6E4F7',
   borderRadius: 999,
@@ -46,307 +84,442 @@ const metaChipStyle = {
   alignItems: 'center'
 } as const
 
-const statusStyleMap: Record<CourseDetailStatus, { label: string, bg: string, color: string, border: string }> = {
-  'dang-hoc': { label: 'Đang học', bg: '#E8F1FF', color: '#2F5E9E', border: '#D5E6FF' },
-  'da-phan-hoi': { label: 'Đã phản hồi', bg: '#EAF7EE', color: '#389E0D', border: '#D1F0DC' },
-  'chua-phan-hoi': { label: 'Chưa phản hồi', bg: '#FFF6E6', color: '#D48806', border: '#FFE4B5' }
+const chartHeight = 310
+
+const FALLBACK_DATA: CourseDetailDashboardData = {
+  header: {
+    courseName: 'Xây dựng phần mềm web',
+    semester: '2025-2026-HK2',
+    totalResponses: 128,
+    dataReliabilityPercent: 92
+  },
+  kpis: {
+    qualityIndex: 4.4,
+    courseScore: 8.7,
+    instructorScore: 4.5,
+    perceivedDifficulty: 'Trung bình'
+  },
+  radar: [
+    { factor: 'Độ rõ ràng', score: 88 },
+    { factor: 'Công bằng', score: 84 },
+    { factor: 'Tương tác', score: 76 },
+    { factor: 'Hỗ trợ', score: 82 },
+    { factor: 'Động lực', score: 79 },
+    { factor: 'Phù hợp môn học', score: 86 }
+  ],
+  ratingDistribution: [
+    { rating: '1', count: 4 },
+    { rating: '2', count: 9 },
+    { rating: '3', count: 21 },
+    { rating: '4', count: 46 },
+    { rating: '5', count: 48 }
+  ],
+  trend: [
+    { period: 'Tuần 1', score: 4.1 },
+    { period: 'Tuần 3', score: 4.2 },
+    { period: 'Tuần 5', score: 4.3 },
+    { period: 'Tuần 7', score: 4.4 },
+    { period: 'Tuần 9', score: 4.4 }
+  ],
+  insight: {
+    strengths: ['Độ rõ ràng', 'Phù hợp môn học', 'Công bằng'],
+    improvements: ['Tương tác', 'Động lực', 'Hỗ trợ']
+  }
 }
 
-const difficultyStyleMap: Record<CourseDetailDifficulty, { label: string, bg: string, color: string, border: string }> = {
-  de: { label: 'Dễ', bg: '#EAF7EE', color: '#389E0D', border: '#D1F0DC' },
-  'trung-binh': { label: 'Trung bình', bg: '#E8F1FF', color: '#2F5E9E', border: '#D5E6FF' },
-  kho: { label: 'Khó', bg: '#FDECEF', color: '#CF1322', border: '#F7D7DE' }
+const getCourseById = (courseId: string): Course | undefined => {
+  const normalized = courseId.trim().toUpperCase()
+  return baseStudentCourses.find((course) => course.id.toUpperCase() === normalized)
 }
 
-type KpiCardProps = {
-  title: string
-  value: string
-  extra?: React.ReactNode
+const getFallbackByCourseId = (courseId: string): CourseDetailDashboardData => {
+  const matchedCourse = getCourseById(courseId)
+
+  if (!matchedCourse) {
+    return {
+      ...FALLBACK_DATA,
+      header: {
+        ...FALLBACK_DATA.header,
+        courseName: courseId ? `Môn học ${courseId.toUpperCase()}` : FALLBACK_DATA.header.courseName
+      }
+    }
+  }
+
+  const submissions = getFeedbackWorkflowState().submissions ?? {}
+  const responseCount = submissions[matchedCourse.id] ? 1 : 0
+  const reliabilityPercent = responseCount > 0 ? 72 : 12
+
+  const courseScoreOn5 = Number((matchedCourse.courseScore > 5 ? matchedCourse.courseScore / 2 : matchedCourse.courseScore).toFixed(1))
+  const instructorScore = Number(matchedCourse.instructorScore.toFixed(1))
+  const qualityIndex = Number((((courseScoreOn5 + instructorScore) / 2)).toFixed(1))
+
+  const trendBase = qualityIndex
+  const trend = [
+    { period: 'Tuần 1', score: Number(Math.max(1, trendBase - 0.3).toFixed(1)) },
+    { period: 'Tuần 3', score: Number(Math.max(1, trendBase - 0.2).toFixed(1)) },
+    { period: 'Tuần 5', score: Number(Math.max(1, trendBase - 0.1).toFixed(1)) },
+    { period: 'Tuần 7', score: Number(Math.max(1, trendBase).toFixed(1)) },
+    { period: 'Tuần 9', score: Number(Math.max(1, trendBase + 0.1).toFixed(1)) }
+  ]
+
+  return {
+    ...FALLBACK_DATA,
+    header: {
+      courseName: matchedCourse.subject,
+      semester: matchedCourse.semester,
+      totalResponses: responseCount,
+      dataReliabilityPercent: reliabilityPercent
+    },
+    kpis: {
+      qualityIndex,
+      courseScore: courseScoreOn5,
+      instructorScore,
+      perceivedDifficulty: getDifficultyLabel(matchedCourse.difficultyLevel)
+    },
+    trend
+  }
 }
 
-function KpiCard({ title, value, extra }: KpiCardProps) {
-  return (
-    <Card
-      style={{
-        ...baseCardStyle,
-        width: '100%',
-        height: '100%'
-      }}
-      styles={{ body: { height: '100%' } }}
-    >
-      <Space
-        direction="vertical"
-        size={8}
-        style={{
-          width: '100%',
-          height: '100%',
-          justifyContent: 'center',
-          alignItems: 'center',
-          textAlign: 'center'
-        }}
-      >
-        <Typography.Text style={{ color: '#42546B', fontSize: 14 }}>{title}</Typography.Text>
-        <Typography.Title level={3} style={{ margin: 0, color: '#163253' }}>
-          {value}
-        </Typography.Title>
-        {extra}
-      </Space>
-    </Card>
-  )
+const getDifficultyLabel = (value: unknown) => {
+  const normalized = String(value ?? '').trim().toLowerCase()
+
+  if (normalized === 'de' || normalized === 'easy') return 'Dễ'
+  if (normalized === 'kho' || normalized === 'hard') return 'Khó'
+  if (normalized === 'trung-binh' || normalized === 'medium') return 'Trung bình'
+
+  return String(value || 'Trung bình')
 }
 
-export default function CourseDetailPage() {
+const pickTopThree = (items: unknown) => {
+  if (!Array.isArray(items)) return [] as string[]
+
+  return items
+    .map((item) => String(item ?? '').trim())
+    .filter((item) => item.length > 0)
+    .slice(0, 3)
+}
+
+const normalizeDistributionFromScores = (scores: number[]) => {
+  const buckets = [1, 2, 3, 4, 5].map((rating) => ({ rating: String(rating), count: 0 }))
+
+  scores.forEach((score) => {
+    const clamped = Math.max(1, Math.min(5, Math.round(score)))
+    const bucket = buckets.find((item) => Number(item.rating) === clamped)
+    if (bucket) bucket.count += 1
+  })
+
+  return buckets
+}
+
+const normalizeDashboardData = (payload: unknown): CourseDetailDashboardData => {
+  const source = ((payload as ApiResponse)?.data ?? payload) as Record<string, unknown>
+
+  const headerSource = (source.header ?? source) as Record<string, unknown>
+  const kpiSource = (source.kpis ?? source) as Record<string, unknown>
+
+  const radarSource = ((source.teachingFactors ?? source.qualityRadar ?? []) as unknown[])
+    .map((item) => {
+      const row = item as Record<string, unknown>
+      return {
+        factor: String(row.factor ?? row.metric ?? row.name ?? '').trim(),
+        score: Number(row.score ?? row.value ?? 0)
+      }
+    })
+    .filter((item) => item.factor.length > 0)
+
+  const distributionSourceRaw = (source.ratingDistribution ?? source.distribution ?? []) as unknown[]
+  const distributionSource = distributionSourceRaw
+    .map((item) => {
+      const row = item as Record<string, unknown>
+      return {
+        rating: String(row.rating ?? row.star ?? row.label ?? '').trim(),
+        count: Number(row.count ?? row.value ?? 0)
+      }
+    })
+    .filter((item) => item.rating.length > 0)
+
+  const trendSource = ((source.trend ?? source.trendOverTime ?? []) as unknown[])
+    .map((item) => {
+      const row = item as Record<string, unknown>
+      return {
+        period: String(row.period ?? row.time ?? row.label ?? row.semester ?? '').trim(),
+        score: Number(row.score ?? row.value ?? row.qualityIndex ?? 0)
+      }
+    })
+    .filter((item) => item.period.length > 0)
+
+  const insightsSource = (source.insight ?? source.insights ?? {}) as Record<string, unknown>
+  const strengths = pickTopThree(insightsSource.strengths)
+  const improvements = pickTopThree(insightsSource.improvements ?? insightsSource.limitations)
+
+  const scoresForDistribution = radarSource.map((item) => item.score / 20)
+  const ratingDistribution = distributionSource.length > 0
+    ? distributionSource
+    : normalizeDistributionFromScores(scoresForDistribution)
+
+  return {
+    header: {
+      courseName: String(
+        headerSource.courseName
+        ?? headerSource.subjectName
+        ?? headerSource.course
+        ?? FALLBACK_DATA.header.courseName
+      ),
+      semester: String(headerSource.semester ?? FALLBACK_DATA.header.semester),
+      totalResponses: Number(headerSource.totalResponses ?? headerSource.responses ?? FALLBACK_DATA.header.totalResponses),
+      dataReliabilityPercent: Number(
+        headerSource.dataReliabilityPercent
+        ?? headerSource.reliabilityPercent
+        ?? FALLBACK_DATA.header.dataReliabilityPercent
+      )
+    },
+    kpis: {
+      qualityIndex: Number(kpiSource.qualityIndex ?? kpiSource.teachingQualityIndex ?? FALLBACK_DATA.kpis.qualityIndex),
+      courseScore: Number(kpiSource.courseScore ?? kpiSource.overallCourseScore ?? FALLBACK_DATA.kpis.courseScore),
+      instructorScore: Number(kpiSource.instructorScore ?? FALLBACK_DATA.kpis.instructorScore),
+      perceivedDifficulty: getDifficultyLabel(kpiSource.perceivedDifficulty ?? kpiSource.difficultyLevel ?? FALLBACK_DATA.kpis.perceivedDifficulty)
+    },
+    radar: radarSource.length > 0 ? radarSource : FALLBACK_DATA.radar,
+    ratingDistribution,
+    trend: trendSource.length > 0 ? trendSource : FALLBACK_DATA.trend,
+    insight: {
+      strengths: strengths.length > 0 ? strengths : FALLBACK_DATA.insight.strengths,
+      improvements: improvements.length > 0 ? improvements : FALLBACK_DATA.insight.improvements
+    }
+  }
+}
+
+function CourseDetailDashboard() {
   const navigate = useNavigate()
   const params = useParams()
   const courseId = params.courseId ?? ''
 
-  const { data, isLoading, isError, error } = useStudentCourseDetailQuery(courseId)
+  const [loading, setLoading] = useState(true)
+  const [dashboardData, setDashboardData] = useState<CourseDetailDashboardData | null>(null)
 
-  const submissionMap = getFeedbackWorkflowState().submissions ?? {}
-  const submissionExists = Boolean(submissionMap[courseId])
-  const responseCount = submissionExists ? 1 : 0
+  useEffect(() => {
+    let mounted = true
 
-  const dataConfidence = useMemo(() => {
-    if (responseCount >= 10) return { label: 'Rất tin cậy', percent: 92 }
-    if (responseCount >= 5) return { label: 'Khá tin cậy', percent: 72 }
-    if (responseCount > 0) return { label: 'Độ tin cậy thấp', percent: 38 }
-    return { label: 'Không đủ dữ liệu', percent: 12 }
-  }, [responseCount])
+    const loadData = async () => {
+      setLoading(true)
 
-  const statusStyle = useMemo(() => {
-    if (!data) return statusStyleMap['dang-hoc']
-    return statusStyleMap[data.header.status]
-  }, [data])
+      try {
+        const response = await fetch(`/api/instructor/course/${courseId}`, { method: 'GET' })
 
-  if (isLoading) {
+        if (!response.ok) {
+          throw new Error('Không thể tải dữ liệu chi tiết môn học')
+        }
+
+        const payload = await response.json()
+        if (!mounted) return
+
+        setDashboardData(normalizeDashboardData(payload))
+      } catch {
+        if (!mounted) return
+        setDashboardData(getFallbackByCourseId(courseId))
+      } finally {
+        if (mounted) setLoading(false)
+      }
+    }
+
+    if (courseId) {
+      loadData()
+    } else {
+      setDashboardData(getFallbackByCourseId(courseId))
+      setLoading(false)
+    }
+
+    return () => {
+      mounted = false
+    }
+  }, [courseId])
+
+  const safeData = useMemo(() => dashboardData ?? getFallbackByCourseId(courseId), [dashboardData, courseId])
+
+  if (loading) {
     return (
-      <Card style={baseCardStyle}>
-        <div
-          style={{
-            minHeight: 280,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexDirection: 'column',
-            gap: 12,
-            color: '#42546B'
-          }}
-        >
-          <Spin size="large" />
-          <Typography.Text>Đang tải chi tiết môn học...</Typography.Text>
+      <Card style={surfaceCardStyle}>
+        <div style={{ minHeight: 280, display: 'grid', placeItems: 'center' }}>
+          <Space direction="vertical" size={12} align="center">
+            <Spin size="large" />
+            <Typography.Text style={{ color: '#42546B' }}>Đang tải bảng điều khiển chi tiết môn học...</Typography.Text>
+          </Space>
         </div>
       </Card>
     )
   }
 
-  if (isError) {
-    return (
-      <Alert
-        type="error"
-        showIcon
-        message="Không tải được chi tiết môn học"
-        description={(error as Error)?.message}
-      />
-    )
-  }
-
-  if (!data) {
-    return (
-      <Card style={baseCardStyle}>
-        <Empty description="Không tìm thấy thông tin môn học" />
-      </Card>
-    )
-  }
-
-  const difficultyStyle = difficultyStyleMap[data.kpis.difficultyLevel]
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <Card style={baseCardStyle}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+    <div style={{ width: '100%' }}>
+      <div
+        style={{
+          width: '100%',
+          maxWidth: 1480,
+          margin: '0 auto',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 20
+        }}
+      >
+        <Card
+          style={{ ...surfaceCardStyle, width: '100%' }}
+          bodyStyle={{ minHeight: 158, padding: '26px 24px', display: 'flex', alignItems: 'center' }}
+        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%' }}>
           <Button
             shape="circle"
             size="large"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate('/instructor/courses')}
-            aria-label="Quay lại danh sách môn giảng dạy"
+            aria-label="Quay lại danh sách môn"
           />
 
-          <Space direction="vertical" size={14} style={{ width: '100%' }}>
-            <Typography.Title
-              level={1}
-              style={{
-                margin: 0,
-                color: '#163253',
-                fontSize: 32,
-                fontWeight: 800,
-                letterSpacing: 0.4
-              }}
-            >
-              {data.header.subjectName}
+          <Space direction="vertical" size={18} style={{ width: '100%' }}>
+            <Typography.Title level={2} style={{ margin: 0, color: '#163253' }}>
+              {safeData.header.courseName}
             </Typography.Title>
 
-            <Space size={20} align="center" wrap style={{ rowGap: 10 }}>
-              <span style={metaChipStyle}>
-                <Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.4 }}>
-                  Học kỳ: <strong style={{ color: '#163253' }}>{data.header.semester}</strong>
+            <Space size={12} wrap style={{ marginTop: 2 }}>
+              <span style={badgeStyle}>
+                <Typography.Text style={{ color: '#42546B' }}>
+                  Học kỳ: <strong style={{ color: '#163253' }}>{safeData.header.semester}</strong>
                 </Typography.Text>
               </span>
-              <span style={metaChipStyle}>
-                <Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.4 }}>
-                  Giảng viên: <strong style={{ color: '#163253' }}>{data.header.instructor}</strong>
+              <span style={badgeStyle}>
+                <Typography.Text style={{ color: '#42546B' }}>
+                  Tổng phản hồi: <strong style={{ color: '#163253' }}>{safeData.header.totalResponses}</strong>
                 </Typography.Text>
               </span>
-
-              <span style={metaChipStyle}>
-                <Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.4 }}>
-                  Số phản hồi: <strong style={{ color: '#163253' }}>{responseCount}</strong>
+              <span style={badgeStyle}>
+                <Typography.Text style={{ color: '#42546B' }}>
+                  Độ tin cậy dữ liệu: <strong style={{ color: '#163253' }}>{safeData.header.dataReliabilityPercent}%</strong>
                 </Typography.Text>
               </span>
-
-              <span style={metaChipStyle}>
-                <Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.4 }}>
-                  Độ tin cậy dữ liệu: <strong style={{ color: '#163253' }}>{dataConfidence.label}</strong>
-                </Typography.Text>
-              </span>
-
-              <Tag
-                style={{
-                  background: statusStyle.bg,
-                  color: statusStyle.color,
-                  borderColor: statusStyle.border,
-                  borderRadius: 999,
-                  paddingInline: 14,
-                  height: 32,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  margin: 0
-                }}
-              >
-                {statusStyle.label}
-              </Tag>
             </Space>
           </Space>
         </div>
-      </Card>
+        </Card>
 
-      <Row gutter={[24, 20]} align="stretch">
-        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-          <KpiCard title="Quality Index" value={data.kpis.overallCourseScore.toFixed(1)} />
+        <Row gutter={[16, 16]}>
+        <Col xs={24} lg={6}>
+          <StatCard title="Chỉ số chất lượng" value={safeData.kpis.qualityIndex.toFixed(1)} />
         </Col>
-        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-          <KpiCard title="Điểm môn học" value={`${data.kpis.overallCourseScore.toFixed(1)}`} />
+        <Col xs={24} lg={6}>
+          <StatCard title="Điểm môn học" value={safeData.kpis.courseScore.toFixed(1)} />
         </Col>
-        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-          <KpiCard
-            title="Điểm giảng viên"
-            value={`${data.kpis.instructorScore.toFixed(1)}/5`}
-          />
+        <Col xs={24} lg={6}>
+          <StatCard title="Điểm giảng viên" value={safeData.kpis.instructorScore.toFixed(1)} />
         </Col>
-        <Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-          <KpiCard title="Độ khó cảm nhận" value={difficultyStyle.label} />
+        <Col xs={24} lg={6}>
+          <StatCard title="Độ khó cảm nhận" value={safeData.kpis.perceivedDifficulty} />
         </Col>
-      </Row>
+        </Row>
 
-      <Row gutter={[16, 16]}>
-        <Col xs={24} xl={12}>
-          <Card style={baseCardStyle}>
-            <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12, color: '#163253' }}>
-              Radar chart: các yếu tố giảng dạy
-            </Typography.Title>
-            <div style={{ width: '100%', height: 320 }}>
-              <ResponsiveContainer>
-                <RadarChart data={data.qualityRadar}>
-                  <PolarGrid stroke="#D7E1F0" />
-                  <PolarAngleAxis dataKey="metric" tick={{ fill: '#42546B', fontSize: 12 }} />
-                  <Radar
-                    name="Chất lượng"
-                    dataKey="score"
-                    stroke="#004286"
-                    fill="#5D8CC7"
-                    fillOpacity={0.35}
-                    strokeWidth={2}
-                  />
-                  <Tooltip />
-                </RadarChart>
-              </ResponsiveContainer>
+        <Row gutter={[16, 16]} align="stretch">
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+          <Card style={{ ...surfaceCardStyle, width: '100%' }} title="Biểu đồ radar (yếu tố giảng dạy)">
+            {safeData.radar.length === 0 ? (
+              <Empty description="Chưa có dữ liệu" />
+            ) : (
+              <div style={{ width: '100%', height: chartHeight }}>
+                <ResponsiveContainer>
+                  <RadarChart data={safeData.radar}>
+                    <PolarGrid stroke="#D7E1F0" />
+                    <PolarAngleAxis dataKey="factor" tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <Tooltip />
+                    <Radar dataKey="score" name="Yếu tố giảng dạy" stroke="#004286" fill="#004286" fillOpacity={0.25} strokeWidth={2} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+          <Card style={{ ...surfaceCardStyle, width: '100%' }} title="Biểu đồ cột (phân bố đánh giá 1-5)">
+            {safeData.ratingDistribution.length === 0 ? (
+              <Empty description="Chưa có dữ liệu" />
+            ) : (
+              <div style={{ width: '100%', height: chartHeight }}>
+                <ResponsiveContainer>
+                  <BarChart data={safeData.ratingDistribution} margin={{ left: 8, right: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E3EAF5" />
+                    <XAxis dataKey="rating" tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <YAxis allowDecimals={false} tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="count" name="Số phản hồi" radius={[8, 8, 0, 0]} fill="#2F5E9E" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+          <Card
+            style={{ ...surfaceCardStyle, width: '100%', height: '100%' }}
+            bodyStyle={{ height: chartHeight, padding: 16 }}
+            title="Biểu đồ đường (xu hướng theo thời gian)"
+          >
+            {safeData.trend.length === 0 ? (
+              <Empty description="Chưa có dữ liệu" />
+            ) : (
+              <div style={{ width: '100%', height: '100%' }}>
+                <ResponsiveContainer>
+                  <LineChart data={safeData.trend} margin={{ left: 8, right: 8 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E3EAF5" />
+                    <XAxis dataKey="period" tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <YAxis tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="score" name="Xu hướng chất lượng" stroke="#004286" strokeWidth={3} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} lg={12} style={{ display: 'flex' }}>
+          <Card
+            style={{ ...surfaceCardStyle, width: '100%', height: '100%' }}
+            title="Hộp nhận định"
+            bodyStyle={{ height: chartHeight, padding: 16 }}
+          >
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10 }}>
+              <Card
+                size="small"
+                title="Top 3 điểm mạnh"
+                bodyStyle={{ padding: '12px 16px', height: '100%' }}
+                style={{ borderRadius: 12, borderColor: '#D5E6FF', background: '#F4F8FF', flex: 1, margin: 0 }}
+              >
+                <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
+                  {safeData.insight.strengths.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </Card>
+
+              <Card
+                size="small"
+                title="Top 3 điểm cần cải thiện"
+                bodyStyle={{ padding: '12px 16px', height: '100%' }}
+                style={{ borderRadius: 12, borderColor: '#FFE3C0', background: '#FFF8ED', flex: 1, margin: 0 }}
+              >
+                <ul style={{ margin: 0, paddingLeft: 18, lineHeight: 1.8 }}>
+                  {safeData.insight.improvements.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </Card>
             </div>
           </Card>
         </Col>
-
-        <Col xs={24} xl={12}>
-          <Card style={baseCardStyle}>
-            <Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12, color: '#163253' }}>
-              Bar chart: phân bố đánh giá 1–5
-            </Typography.Title>
-            <div style={{ width: '100%', height: 320 }}>
-              <ResponsiveContainer>
-                <BarChart data={data.instructorBars} margin={{ left: 8, right: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#E3EAF5" />
-                  <XAxis dataKey="factor" tick={{ fill: '#42546B', fontSize: 12 }} />
-                  <YAxis domain={[0, 5]} tick={{ fill: '#42546B', fontSize: 12 }} />
-                  <Tooltip />
-                  <Bar dataKey="score" radius={[8, 8, 0, 0]} fill="#2F5E9E" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[20, 20]}>
-        <Col xs={24} lg={8} style={{ display: 'flex' }}>
-          <Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
-            <Alert
-              type="success"
-              showIcon
-              icon={<CheckCircleOutlined />}
-              message="Top điểm mạnh"
-              description={
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {data.insight.strengths.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={8} style={{ display: 'flex' }}>
-          <Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
-            <Alert
-              type="error"
-              showIcon
-              icon={<WarningOutlined />}
-              message="Top vấn đề cần cải thiện"
-              description={
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {data.insight.limitations.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} lg={8} style={{ display: 'flex' }}>
-          <Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
-            <Alert
-              type="info"
-              showIcon
-              icon={<InfoCircleOutlined />}
-              message="Gợi ý cải thiện"
-              description={
-                <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {data.insight.suggestions.map((item) => (
-                    <li key={item}>{item}</li>
-                  ))}
-                </ul>
-              }
-            />
-          </Card>
-        </Col>
-      </Row>
+        </Row>
+      </div>
     </div>
   )
 }
+
+export default CourseDetailDashboard

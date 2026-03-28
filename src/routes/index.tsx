@@ -15,6 +15,7 @@ import StudentProfilePage from '../modules/student/pages/ProfilePage'
 import InstructorDashboardPage from '../modules/instructor/pages/DashboardPage'
 import InstructorCoursesPage from '../modules/instructor/pages/CoursesPage'
 import InstructorCourseDetailPage from '../modules/instructor/pages/CourseDetailPage'
+import InstructorQualityPage from '../modules/instructor/pages/QualityPage'
 import InstructorFeedbackPage from '../modules/instructor/pages/FeedbackPage'
 import InstructorRecommendationsPage from '../modules/instructor/pages/RecommendationsPage'
 import InstructorProfilePage from '../modules/instructor/pages/ProfilePage'
@@ -48,6 +49,8 @@ export default function AppRoutes() {
         <Route path="/instructor/dashboard" element={<InstructorLayout><InstructorDashboardPage /></InstructorLayout>} />
         <Route path="/instructor/courses" element={<InstructorLayout><InstructorCoursesPage /></InstructorLayout>} />
         <Route path="/instructor/course/:courseId" element={<InstructorLayout><InstructorCourseDetailPage /></InstructorLayout>} />
+        <Route path="/instructor/quality" element={<InstructorLayout><InstructorQualityPage /></InstructorLayout>} />
+        <Route path="/instructor/trends" element={<Navigate to="/instructor/quality" replace />} />
         <Route path="/instructor/feedback" element={<InstructorLayout><InstructorFeedbackPage /></InstructorLayout>} />
         <Route path="/instructor/recommendations" element={<InstructorLayout><InstructorRecommendationsPage /></InstructorLayout>} />
         <Route path="/instructor/profile" element={<InstructorLayout><InstructorProfilePage /></InstructorLayout>} />

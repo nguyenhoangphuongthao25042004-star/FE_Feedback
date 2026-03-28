@@ -9,16 +9,17 @@ type PageHeaderProps = {
   description?: string
   extra?: ReactNode
   prefix?: ReactNode
+  contentGap?: number
 }
 
 // Header đầu trang có tiêu đề mô tả và vùng action bên phải
-export default function PageHeader({ title, description, extra, prefix }: PageHeaderProps) {
+export default function PageHeader({ title, description, extra, prefix, contentGap = 4 }: PageHeaderProps) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, flexWrap: 'wrap' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         {/* optional prefix (e.g. back button) */}
   {prefix}
-        <Space direction="vertical" size={4}>
+        <Space direction="vertical" size={contentGap}>
           <Title
             level={1}
             style={{

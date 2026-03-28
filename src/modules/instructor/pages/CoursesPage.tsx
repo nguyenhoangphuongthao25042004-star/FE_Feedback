@@ -7,7 +7,7 @@ import { useNavigate } from 'react-router-dom'
 import { useStudentCoursesQuery } from '../../student/api/courseApi'
 import type { Course } from '../../student/types/course'
 import { useUiStore } from '../../../stores/ui.store'
-import { Select, Space } from 'antd'
+import { Select } from 'antd'
 import { getFeedbackWorkflowState } from '../../student/api/feedbackData'
 import { ArrowUpOutlined, ArrowDownOutlined, MinusOutlined } from '@ant-design/icons'
 
@@ -207,50 +207,58 @@ export default function CoursesPage() {
           boxShadow: '0 12px 28px rgba(0, 45, 109, 0.08)'
         }}
       >
-        <Typography.Title
-          level={1}
+        <div
           style={{
-            margin: 0,
-            color: '#163253',
-            fontSize: 32,
-            fontWeight: 800,
-            letterSpacing: 0.4
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            gap: 20,
+            flexWrap: 'wrap'
           }}
         >
-          Danh sách môn giảng dạy
-        </Typography.Title>
+          <div style={{ flex: '1 1 520px', minWidth: 300 }}>
+            <Typography.Title
+              level={1}
+              style={{
+                margin: 0,
+                color: '#163253',
+                fontSize: 32,
+                fontWeight: 800,
+                letterSpacing: 0.4
+              }}
+            >
+              Danh sách môn giảng dạy
+            </Typography.Title>
 
-        <Space
-          direction="horizontal"
-          size={12}
-          style={{ width: '100%', justifyContent: 'flex-end', marginTop: -15, marginBottom: -8 }}
-        >
-          <Select
-            placeholder="Trạng thái"
-            allowClear
-            size="large"
-            style={{ width: 450, maxWidth: '100%', fontSize: 16 }}
-            value={statusFilterSelect ?? undefined}
-            onChange={(val) => setStatusFilterSelect(val ?? null)}
-            options={[
-              { label: 'Đang học', value: 'dang-hoc' },
-              { label: 'Chưa phản hồi', value: 'chua-phan-hoi' },
-              { label: 'Đã phản hồi', value: 'da-phan-hoi' }
-            ]}
-          />
-        </Space>
+            <Typography.Text
+              style={{
+                marginTop: 8,
+                display: 'inline-block',
+                color: '#42546B',
+                fontSize: 16,
+                lineHeight: 1.6
+              }}
+            >
+              Theo dõi nhanh kết quả học tập và phản hồi của sinh viên theo từng môn học bạn phụ trách
+            </Typography.Text>
+          </div>
 
-        <Typography.Text
-          style={{
-            marginTop: -22,
-            display: 'inline-block',
-            color: '#42546B',
-            fontSize: 16,
-            lineHeight: 1.6
-          }}
-        >
-          Theo dõi nhanh kết quả học tập và phản hồi của sinh viên theo từng môn học bạn phụ trách
-        </Typography.Text>
+          <div style={{ flex: '0 1 450px', alignSelf: 'center' }}>
+            <Select
+              placeholder="Trạng thái"
+              allowClear
+              size="large"
+              style={{ width: '100%', fontSize: 16 }}
+              value={statusFilterSelect ?? undefined}
+              onChange={(val) => setStatusFilterSelect(val ?? null)}
+              options={[
+                { label: 'Đang học', value: 'dang-hoc' },
+                { label: 'Chưa phản hồi', value: 'chua-phan-hoi' },
+                { label: 'Đã phản hồi', value: 'da-phan-hoi' }
+              ]}
+            />
+          </div>
+        </div>
       </Card>
 
       {isError && (
