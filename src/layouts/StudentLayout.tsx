@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { useEffect, useState } from 'react'
 import { Drawer, Grid, Layout } from 'antd'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 
 import Sidebar from '../components/layout/Sidebar'
 import Topbar from '../components/layout/Topbar'
@@ -17,9 +17,11 @@ type StudentLayoutProps = {
 // Layout chính cho toàn bộ màn sinh viên
 export default function StudentLayout({ children }: StudentLayoutProps) {
   const screens = useBreakpoint() // lấy trạng thái breakpoints hiện tại
+  const location = useLocation()
   const isMobile = !screens.md // mobile khi nhỏ hơn md
   const isTablet = Boolean(screens.md && !screens.lg) // tablet khi từ md đến trước lg
-  const headerHeight = isMobile ? 112 : 72 // header mobile cao hơn để đủ chỗ 2 hàng
+  const shouldShowTopbarSearch = location.pathname === '/student/courses' || location.pathname === '/student/history' || location.pathname === '/instructor/courses'
+  const headerHeight = isMobile ? (shouldShowTopbarSearch ? 188 : 112) : 72 // header mobile cao hơn để đủ chỗ 2 hàng
   const [collapsed, setCollapsed] = useState(false) // trạng thái thu gọn sidebar
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false) // trạng thái mở drawer trên mobile
   const sidebarWidth = collapsed ? 88 : 280 // tăng thêm để hiển thị đủ nhãn menu dài
@@ -114,3 +116,5 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
     </Layout>
   )
 }
+
+

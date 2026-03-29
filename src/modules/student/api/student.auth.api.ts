@@ -1,14 +1,14 @@
-import type { LoginRequest, User } from '../types/auth.types'
+import type { LoginRequest, User } from '../../auth/types/auth.types'
 
-// Kiểu response chung cho API đăng nhập giả
 type ApiResponse<T> = {
   success: boolean
   message: string
   data: T
 }
 
-// API giả mô phỏng đăng nhập theo tài khoản mẫu
-export const loginApi = async (data: LoginRequest): Promise<ApiResponse<User>> => {
+export const loginStudentApi = async (
+  data: LoginRequest
+): Promise<ApiResponse<User>> => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       if (data.email === 'student@test.com' && data.password === '123456') {

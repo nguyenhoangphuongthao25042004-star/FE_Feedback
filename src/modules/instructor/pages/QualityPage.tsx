@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Alert, Card, Col, Empty, Row, Spin, Table, Tag } from 'antd'
+﻿import { useEffect, useMemo, useState } from 'react'
+import { Alert, Card, Col, Empty, Grid, Row, Spin, Table, Tag } from 'antd'
 import type { TableColumnsType } from 'antd'
 import {
   Area,
@@ -49,6 +49,15 @@ const chartTooltipStyle = {
   boxShadow: '0 8px 18px rgba(28, 61, 102, 0.12)'
 }
 
+const pageContainerStyle = {
+  width: '100%',
+  maxWidth: 1400,
+  margin: '0 auto',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 20
+} as const
+
 const renderChartHeader = (title: string, description: string) => (
   <div style={{ display: 'flex', flexDirection: 'column', gap: 4, paddingRight: 8 }}>
     <div style={{ color: '#163253', fontWeight: 700, fontSize: 18, lineHeight: 1.4 }}>
@@ -69,10 +78,93 @@ const featureLabelMap: Record<string, string> = {
   'course fit': 'Phù hợp môn học'
 }
 
+const compactFeatureLabelMap: Record<string, string> = {
+  'Độ rõ ràng': 'Rõ ràng',
+  'Phù hợp môn học': 'Phù hợp môn'
+}
+
 
 const toFeatureLabel = (feature: string) => {
   const key = String(feature || '').trim().toLowerCase()
   return featureLabelMap[key] || feature
+}
+
+const toCompactFeatureLabel = (label: string) => compactFeatureLabelMap[label] || label
+
+type FeatureAxisTickProps = {
+  x?: number
+  y?: number
+  isMobile?: boolean
+  isCompact?: boolean
+  payload?: {
+    value?: string
+  }
+}
+
+const splitFeatureLabel = (value: string, maxLineLength = 12, maxLines = 2) => {
+  const words = value.split(' ').filter(Boolean)
+
+  if (words.length <= 1 || value.length <= maxLineLength) {
+    return [value]
+  }
+
+  const lines: string[] = []
+  let currentLine = ''
+
+  words.forEach((word) => {
+    const nextLine = currentLine ? `${currentLine} ${word}` : word
+
+    if (nextLine.length <= maxLineLength) {
+      currentLine = nextLine
+      return
+    }
+
+    if (currentLine) {
+      lines.push(currentLine)
+    }
+
+    currentLine = word
+  })
+
+  if (currentLine) {
+    lines.push(currentLine)
+  }
+
+  if (lines.length <= maxLines) {
+    return lines
+  }
+
+  const trimmedLines = lines.slice(0, maxLines)
+  const lastLine = trimmedLines[maxLines - 1]
+  trimmedLines[maxLines - 1] = lastLine.length > maxLineLength - 1
+    ? `${lastLine.slice(0, maxLineLength - 1)}...`
+    : `${lastLine}...`
+
+  return trimmedLines
+}
+
+function FeatureAxisTick({ x = 0, y = 0, isMobile = false, isCompact = false, payload }: FeatureAxisTickProps) {
+  const label = String(payload?.value ?? '')
+  const lines = splitFeatureLabel(label, isMobile ? 9 : isCompact ? 10 : 12, isMobile ? 3 : 2)
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={isMobile ? 14 : isCompact ? 14 : 16}
+        textAnchor="middle"
+        fill="#4A5F7A"
+        fontSize={isMobile ? 10 : isCompact ? 11 : 12}
+      >
+        {lines.map((line, index) => (
+          <tspan key={`${label}-${index}`} x={0} dy={index === 0 ? 0 : isMobile ? 12 : 13}>
+            {line}
+          </tspan>
+        ))}
+      </text>
+    </g>
+  )
 }
 
 type FeedbackRow = {
@@ -170,6 +262,9 @@ const feedbackRows: FeedbackRow[] = [
 ]
 
 export default function QualityPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
+  const isTablet = Boolean(screens.md && !screens.xxl)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [qualityIndex, setQualityIndex] = useState<QualityIndexData | null>(null)
@@ -241,9 +336,9 @@ export default function QualityPage() {
   const featureChartData = useMemo(() => {
     return featureImportance.map((item) => ({
       ...item,
-      featureLabel: toFeatureLabel(item.feature)
+      featureLabel: isTablet ? toCompactFeatureLabel(toFeatureLabel(item.feature)) : toFeatureLabel(item.feature)
     }))
-  }, [featureImportance])
+  }, [featureImportance, isTablet])
 
   const maxTopIssueCount = useMemo(
     () => Math.max(...topIssueData.map((item) => item.count), 1),
@@ -258,7 +353,8 @@ export default function QualityPage() {
   }, [])
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ width: '100%' }}>
+      <div style={pageContainerStyle}>
       <style>
         {`
           .quality-hover {
@@ -297,22 +393,17 @@ export default function QualityPage() {
         `}
       </style>
 
-      <div
+      <Card
         className="quality-hover"
-        style={{
-          ...surfaceCardStyle,
-          minHeight: 156,
-          padding: '26px 24px',
-          display: 'flex',
-          alignItems: 'center'
-        }}
+        style={surfaceCardStyle}
+        bodyStyle={{ padding: 24 }}
       >
         <PageHeader
           title="Chỉ số chất lượng"
           description="Phân tích chi tiết hiệu suất giảng dạy"
           contentGap={10}
         />
-      </div>
+      </Card>
 
       {error && (
         <Alert
@@ -324,17 +415,17 @@ export default function QualityPage() {
       )}
 
       <Row gutter={[16, 16]}>
-        <Col xs={24} md={12} lg={8}>
+        <Col xs={24} md={8} xl={8}>
           <div className="quality-hover" style={{ borderRadius: 20 }}>
             <StatCard title="Chỉ số chất lượng giảng dạy" value={`${kpis.teachingQualityIndex}/5`} />
           </div>
         </Col>
-        <Col xs={24} md={12} lg={8}>
+        <Col xs={24} md={8} xl={8}>
           <div className="quality-hover" style={{ borderRadius: 20 }}>
             <StatCard title="Xếp hạng" value={`#${kpis.ranking}`} />
           </div>
         </Col>
-        <Col xs={24} md={12} lg={8}>
+        <Col xs={24} md={8} xl={8}>
           <div className="quality-hover" style={{ borderRadius: 20 }}>
             <StatCard title="Tỷ lệ hài lòng" value="85%" />
           </div>
@@ -417,7 +508,7 @@ export default function QualityPage() {
           <Card
             className="quality-hover quality-chart-card"
             hoverable
-            title={renderChartHeader('Phân bổ điểm đánh giá', 'Phân bố số lượng đánh giá theo từng mức điểm từ 1 đến 5.')}
+            title={renderChartHeader('Phân bố điểm đánh giá', 'Phân bố số lượng đánh giá theo từng mức điểm từ 1 đến 5.')}
             style={surfaceCardStyle}
             bodyStyle={chartCardBodyStyle}
           >
@@ -465,12 +556,18 @@ export default function QualityPage() {
               <Empty description="Chưa có dữ liệu mức độ ảnh hưởng" />
             ) : (
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={featureChartData} margin={{ top: 8, right: 18, left: 4, bottom: 8 }}>
+                <BarChart data={featureChartData} margin={{ top: 8, right: 18, left: 4, bottom: isMobile ? 20 : isTablet ? 28 : 20 }} barCategoryGap={isTablet ? '12%' : '18%'}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#E4ECF6" />
-                  <XAxis dataKey="featureLabel" tick={{ fill: '#4A5F7A', fontSize: 12 }} />
+                  <XAxis
+                    dataKey="featureLabel"
+                    interval={0}
+                    height={isMobile ? 82 : isTablet ? 72 : 62}
+                    tick={<FeatureAxisTick isMobile={isMobile} isCompact={isTablet} />}
+                    tickMargin={isMobile ? 6 : isTablet ? 8 : 10}
+                  />
                   <YAxis domain={[0, 100]} tick={{ fill: '#4A5F7A', fontSize: 12 }} />
                   <Tooltip contentStyle={chartTooltipStyle} />
-                  <Bar dataKey="instructorScore" name="Giảng viên" fill="#004286" radius={[8, 8, 0, 0]} barSize={52} />
+                  <Bar dataKey="instructorScore" name="Giảng viên" fill="#004286" radius={[8, 8, 0, 0]} barSize={isTablet ? 42 : 52} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -535,7 +632,7 @@ export default function QualityPage() {
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {topIssueData.map((item) => {
-                  const widthPercent = Math.max((item.count / maxTopIssueCount) * 100, 32)
+                  const widthPercent = Math.max((item.count / maxTopIssueCount) * 100, isMobile ? 56 : isTablet ? 44 : 32)
 
                   return (
                     <div
@@ -543,13 +640,13 @@ export default function QualityPage() {
                       style={{
                         display: 'grid',
                         gridTemplateColumns: 'minmax(0, 1fr) auto',
-                        gap: 14,
+                        gap: isMobile ? 10 : 14,
                         alignItems: 'center'
                       }}
                     >
                       <div
                         style={{
-                          height: 42,
+                          minHeight: isMobile ? 48 : isTablet ? 44 : 42,
                           borderRadius: 8,
                           overflow: 'hidden',
                           background: '#EAF2FF',
@@ -581,22 +678,24 @@ export default function QualityPage() {
                           style={{
                             position: 'relative',
                             zIndex: 1,
-                            height: '100%',
+                            minHeight: isMobile ? 48 : isTablet ? 44 : 42,
                             display: 'flex',
                             alignItems: 'center',
-                            paddingLeft: 64,
-                            paddingRight: 10,
+                            justifyContent: 'flex-start',
+                            paddingLeft: isMobile ? 48 : isTablet ? 56 : 64,
+                            paddingRight: isMobile ? 8 : 10,
                             color: '#163253',
-                            fontSize: 17,
+                            fontSize: isMobile ? 11 : isTablet ? 14 : 17,
                             fontWeight: 600,
-                            whiteSpace: 'nowrap'
+                            lineHeight: 1.25,
+                            textAlign: 'left'
                           }}
                         >
                           {item.issue}
                         </div>
                       </div>
 
-                      <div style={{ color: '#1F2937', fontSize: 18, fontWeight: 600, minWidth: 72 }}>
+                      <div style={{ color: '#1F2937', fontSize: isMobile ? 12 : isTablet ? 15 : 18, fontWeight: 600, minWidth: isMobile ? 56 : 72, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {item.count} lần
                       </div>
                     </div>
@@ -607,6 +706,10 @@ export default function QualityPage() {
           </div>
         </Col>
       </Row>
+      </div>
     </div>
   )
 }
+
+
+

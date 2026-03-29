@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ArrowLeftOutlined } from '@ant-design/icons'
-import { Button, Card, Col, Empty, Row, Space, Spin, Typography } from 'antd'
+import { Button, Card, Col, Empty, Grid, Row, Space, Spin, Typography } from 'antd'
 import {
   Bar,
   BarChart,
@@ -290,6 +290,8 @@ const normalizeDashboardData = (payload: unknown): CourseDetailDashboardData => 
 }
 
 function CourseDetailDashboard() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const navigate = useNavigate()
   const params = useParams()
   const courseId = params.courseId ?? ''
@@ -335,6 +337,7 @@ function CourseDetailDashboard() {
   }, [courseId])
 
   const safeData = useMemo(() => dashboardData ?? getFallbackByCourseId(courseId), [dashboardData, courseId])
+  const stickyHeaderTop = isMobile ? 120 : 88
 
   if (loading) {
     return (
@@ -361,16 +364,18 @@ function CourseDetailDashboard() {
           gap: 20
         }}
       >
-        <Card
-          style={{ ...surfaceCardStyle, width: '100%' }}
-          bodyStyle={{ minHeight: 158, padding: '26px 24px', display: 'flex', alignItems: 'center' }}
-        >
+        <div style={{ position: 'sticky', top: stickyHeaderTop, zIndex: 30 }}>
+          <Card
+            style={{ ...surfaceCardStyle, width: '100%' }}
+            bodyStyle={{ minHeight: 158, padding: '26px 24px', display: 'flex', alignItems: 'center' }}
+          >
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%' }}>
           <Button
             shape="circle"
             size="large"
             icon={<ArrowLeftOutlined />}
             onClick={() => navigate('/instructor/courses')}
+            style={{ borderRadius: 999, width: 44, height: 44, minWidth: 44 }}
             aria-label="Quay lại danh sách môn"
           />
 
@@ -398,8 +403,11 @@ function CourseDetailDashboard() {
             </Space>
           </Space>
         </div>
-        </Card>
+          </Card>
+        </div>
 
+        <div style={{ maxHeight: 'calc(100vh - 240px)', overflow: 'auto', paddingRight: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Row gutter={[16, 16]}>
         <Col xs={24} lg={6}>
           <StatCard title="Chỉ số chất lượng" value={safeData.kpis.qualityIndex.toFixed(1)} />
@@ -517,6 +525,8 @@ function CourseDetailDashboard() {
           </Card>
         </Col>
         </Row>
+          </div>
+        </div>
       </div>
     </div>
   )

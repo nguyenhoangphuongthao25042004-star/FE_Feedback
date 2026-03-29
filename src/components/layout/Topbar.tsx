@@ -7,6 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import logo from '../../assets/STU-topbar.png'
 import collapsedLogo from '../../assets/stu-logo.png'
 import { useAuthStore } from '../../modules/auth/store/auth.store'
+import { instructorNotificationSeeds } from '../../modules/instructor/api/notificationData'
 import { getStudentFeedbackCourses } from '../../modules/student/api/feedbackData'
 import { notificationSeeds as seededNotifications, type NotificationSeed } from '../../modules/student/api/notificationData'
 import { useUiStore } from '../../stores/ui.store'
@@ -26,12 +27,31 @@ type NotificationItem = NotificationSeed & {
   remindAt?: string
 }
 
+type NotificationCopy = {
+  heading: string
+  empty: string
+  unreadSummary: (count: number) => string
+}
+
 const semesterOptions = [
   { value: '2025-2026-HK2', label: '2025 - 2026 - Học kỳ 2' },
   { value: '2025-2026-HK1', label: '2025 - 2026 - Học kỳ 1' }
 ]
 
-const NOTIFICATION_STORAGE_KEY = 'smart-feedback-notifications-v9'
+const STUDENT_NOTIFICATION_COPY: NotificationCopy = {
+  heading: 'Thông báo phản hồi',
+  empty: 'Hiện chưa có thông báo phản hồi nào.',
+  unreadSummary: (count) => `Bạn có ${count} thông báo chưa đọc`
+}
+
+const INSTRUCTOR_NOTIFICATION_COPY: NotificationCopy = {
+  heading: 'Thông báo giảng viên',
+  empty: 'Hiện chưa có thông báo nào dành cho giảng viên.',
+  unreadSummary: (count) => `Giảng viên có ${count} thông báo chưa đọc`
+}
+
+const STUDENT_NOTIFICATION_STORAGE_KEY = 'smart-feedback-student-notifications-v10'
+const INSTRUCTOR_NOTIFICATION_STORAGE_KEY = 'smart-feedback-instructor-notifications-v10'
 
 const legacyNotificationSeeds: NotificationSeed[] = [
   {
@@ -59,8 +79,8 @@ const legacyNotificationSeeds: NotificationSeed[] = [
 
 void legacyNotificationSeeds
 
-const createDefaultNotifications = (): NotificationItem[] => (
-  seededNotifications.map((item) => ({
+const createDefaultNotifications = (seeds: NotificationSeed[]): NotificationItem[] => (
+  seeds.map((item) => ({
     ...item,
     unread: true
   }))
@@ -68,23 +88,23 @@ const createDefaultNotifications = (): NotificationItem[] => (
 
 const canUseStorage = () => typeof window !== 'undefined' && typeof window.localStorage !== 'undefined'
 
-const readStoredNotifications = () => {
-  const fallback = createDefaultNotifications()
+const readStoredNotifications = (storageKey: string, seeds: NotificationSeed[]) => {
+  const fallback = createDefaultNotifications(seeds)
 
   if (!canUseStorage()) return fallback
 
   try {
-    const rawValue = window.localStorage.getItem(NOTIFICATION_STORAGE_KEY)
+    const rawValue = window.localStorage.getItem(storageKey)
 
     if (!rawValue) {
-      window.localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(fallback))
+      window.localStorage.setItem(storageKey, JSON.stringify(fallback))
       return fallback
     }
 
     const parsed = JSON.parse(rawValue) as NotificationItem[]
 
     if (!Array.isArray(parsed)) {
-      window.localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(fallback))
+      window.localStorage.setItem(storageKey, JSON.stringify(fallback))
       return fallback
     }
 
@@ -104,19 +124,19 @@ const readStoredNotifications = () => {
       }
     })
 
-    window.localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(mergedNotifications))
+    window.localStorage.setItem(storageKey, JSON.stringify(mergedNotifications))
     return mergedNotifications
   } catch {
     return fallback
   }
 }
 
-const persistNotifications = (notifications: NotificationItem[]) => {
+const persistNotifications = (storageKey: string, notifications: NotificationItem[]) => {
   if (!canUseStorage()) return
-  window.localStorage.setItem(NOTIFICATION_STORAGE_KEY, JSON.stringify(notifications))
+  window.localStorage.setItem(storageKey, JSON.stringify(notifications))
 }
 
-const normalizeNotifications = (notifications: NotificationItem[]) => {
+const normalizeStudentNotifications = (notifications: NotificationItem[]) => {
   const now = dayjs()
   const courses = getStudentFeedbackCourses()
 
@@ -141,6 +161,24 @@ const normalizeNotifications = (notifications: NotificationItem[]) => {
     })
 }
 
+const normalizeInstructorNotifications = (notifications: NotificationItem[]) => {
+  const now = dayjs()
+
+  return notifications
+    .filter((item) => !now.isAfter(dayjs(item.endDate), 'day'))
+    .map((item) => {
+      if (item.remindAt && (now.isAfter(dayjs(item.remindAt)) || now.isSame(dayjs(item.remindAt)))) {
+        return {
+          ...item,
+          unread: true,
+          remindAt: undefined
+        }
+      }
+
+      return item
+    })
+}
+
 export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collapsed = false, onMenuClick }: TopbarProps) {
   const location = useLocation()
   const navigate = useNavigate()
@@ -151,15 +189,26 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
   const setSelectedSemester = useUiStore((state) => state.setSelectedSemester)
   const setSearchKeyword = useUiStore((state) => state.setSearchKeyword)
   const resetFilters = useUiStore((state) => state.resetFilters)
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() => normalizeNotifications(readStoredNotifications()))
+  const isInstructor = user?.role === 'instructor'
+  const notificationSeeds = isInstructor ? instructorNotificationSeeds : seededNotifications
+  const notificationStorageKey = isInstructor ? INSTRUCTOR_NOTIFICATION_STORAGE_KEY : STUDENT_NOTIFICATION_STORAGE_KEY
+  const normalizeNotifications = isInstructor ? normalizeInstructorNotifications : normalizeStudentNotifications
+  const notificationCopy = isInstructor ? INSTRUCTOR_NOTIFICATION_COPY : STUDENT_NOTIFICATION_COPY
+  const [notifications, setNotifications] = useState<NotificationItem[]>(() => (
+    normalizeNotifications(readStoredNotifications(notificationStorageKey, notificationSeeds))
+  ))
   const avatarLabel = user?.name?.trim().charAt(0).toUpperCase() || 'U'
   // Show the topbar search for student course listings/history and the instructor courses list
   const shouldShowSearch = location.pathname === '/student/courses' || location.pathname === '/student/history' || location.pathname === '/instructor/courses'
 
   useEffect(() => {
+    setNotifications(normalizeNotifications(readStoredNotifications(notificationStorageKey, notificationSeeds)))
+  }, [normalizeNotifications, notificationSeeds, notificationStorageKey])
+
+  useEffect(() => {
     const syncNotifications = () => {
-      const nextNotifications = normalizeNotifications(readStoredNotifications())
-      persistNotifications(nextNotifications)
+      const nextNotifications = normalizeNotifications(readStoredNotifications(notificationStorageKey, notificationSeeds))
+      persistNotifications(notificationStorageKey, nextNotifications)
       setNotifications(nextNotifications)
     }
 
@@ -171,18 +220,18 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
       window.removeEventListener('student-feedback-workflow-updated', syncNotifications)
       window.removeEventListener('focus', syncNotifications)
     }
-  }, [])
+  }, [normalizeNotifications, notificationSeeds, notificationStorageKey])
 
   useEffect(() => {
     const normalized = normalizeNotifications(notifications)
-    persistNotifications(normalized)
+    persistNotifications(notificationStorageKey, normalized)
 
     const hasChanged = JSON.stringify(normalized) !== JSON.stringify(notifications)
 
     if (hasChanged) {
       setNotifications(normalized)
     }
-  }, [location.key, location.pathname, location.search, notifications])
+  }, [location.key, location.pathname, location.search, normalizeNotifications, notificationStorageKey, notifications])
 
   const visibleNotifications = useMemo(
     () => notifications.filter((item) => !item.remindAt),
@@ -201,14 +250,16 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
 
   const handleNotificationAction = (notificationId: string) => {
     const matchedNotification = notifications.find((item) => item.id === notificationId)
-    const matchedCourse = matchedNotification ? getStudentFeedbackCourses().find((course) => course.id === matchedNotification.courseId) : undefined
+    const matchedCourse = !isInstructor && matchedNotification
+      ? getStudentFeedbackCourses().find((course) => course.id === matchedNotification.courseId)
+      : undefined
     const isCompleted = matchedCourse?.feedbackStatus === 'da-phan-hoi'
     const isExpired = matchedNotification ? dayjs().isAfter(dayjs(matchedNotification.endDate), 'day') : false
 
     setNotifications((current) => {
       if (isCompleted || isExpired) {
         const nextNotifications = current.filter((item) => item.id !== notificationId)
-        persistNotifications(nextNotifications)
+        persistNotifications(notificationStorageKey, nextNotifications)
         return nextNotifications
       }
 
@@ -222,7 +273,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           : item
       ))
 
-      persistNotifications(nextNotifications)
+      persistNotifications(notificationStorageKey, nextNotifications)
       return nextNotifications
     })
   }
@@ -299,10 +350,10 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
     >
       <div style={{ paddingInline: 4 }}>
         <Text strong style={{ color: '#163253', fontSize: 16 }}>
-          Thông báo phản hồi
+          {notificationCopy.heading}
         </Text>
         <Text style={{ display: 'block', color: '#6C7C92', marginTop: 2 }}>
-          {unreadCount > 0 ? `Bạn có ${unreadCount} thông báo chưa đọc` : 'Không có thông báo mới'}
+          {unreadCount > 0 ? notificationCopy.unreadSummary(unreadCount) : 'Không có thông báo mới'}
         </Text>
       </div>
 
@@ -315,7 +366,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
             background: '#FFFFFF'
           }}
         >
-          <Text style={{ color: '#5B6B82' }}>Hiện chưa có thông báo phản hồi nào.</Text>
+          <Text style={{ color: '#5B6B82' }}>{notificationCopy.empty}</Text>
         </div>
       ) : visibleNotifications.map((item) => (
         <div
@@ -404,11 +455,11 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           display: 'grid',
           gridTemplateColumns: '44px minmax(0, 1fr)',
           alignItems: 'center',
-          columnGap: 12,
+          columnGap: 10,
           rowGap: 10,
           height: '100%',
           background: '#FFFFFF',
-          padding: '10px 0'
+          padding: '10px 12px'
         }}
       >
         <Button
@@ -427,19 +478,59 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           }}
         />
 
-        <Space size={10} style={{ gridColumn: '2 / 3', gridRow: '1 / 2', minWidth: 0 }}>
-          <img src={logo} alt="STU" style={{ width: 92, height: 28, objectFit: 'contain', flexShrink: 0 }} />
-          <Text strong style={{ fontSize: 16, color: '#163253', lineHeight: 1.4, minWidth: 0 }}>
+        <Space size={8} style={{ gridColumn: '2 / 3', gridRow: '1 / 2', minWidth: 0, overflow: 'hidden' }}>
+          <img src={logo} alt="STU" style={{ width: 64, height: 22, objectFit: 'contain', flexShrink: 0 }} />
+          <Text
+            strong
+            style={{
+              fontSize: 11,
+              color: '#163253',
+              lineHeight: 1.3,
+              minWidth: 0,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden'
+            }}
+          >
             Smart Feedback - Teaching Quality Dashboard
           </Text>
         </Space>
 
-        <div style={{ gridColumn: '2 / 3', gridRow: '2 / 3', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16 }}>
+        {shouldShowSearch && (
+          <Input
+            aria-label="Tìm kiếm"
+            placeholder={location.pathname === '/instructor/courses' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
+            value={searchKeyword}
+            onChange={(event) => setSearchKeyword(event.target.value)}
+            style={{
+              gridColumn: '2 / 3',
+              gridRow: '2 / 3',
+              width: '100%',
+              height: 44,
+              borderRadius: 999,
+              background: '#F4F7FC',
+              borderColor: '#C4D3EA'
+            }}
+          />
+        )}
+
+        <div
+          style={{
+            gridColumn: '2 / 3',
+            gridRow: shouldShowSearch ? '3 / 4' : '2 / 3',
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) 44px 44px',
+            alignItems: 'center',
+            gap: 8,
+            minWidth: 0
+          }}
+        >
           <Select
             aria-label="Chọn học kỳ"
             value={selectedSemester}
             onChange={setSelectedSemester}
-            style={{ flex: 1 }}
+            style={{ width: '100%', minWidth: 0 }}
             size="large"
             options={semesterOptions}
           />
@@ -455,23 +546,50 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
     return (
       <div
         style={{
-          display: 'flex',
-          justifyContent: 'space-between',
+          display: 'grid',
+          gridTemplateColumns: `${sidebarWidth}px minmax(0, 1fr) auto`,
           alignItems: 'center',
           height: '100%',
           background: '#FFFFFF',
-          padding: '0 16px',
-          gap: 16
+          padding: '0 16px 0 0',
+          gap: 20
         }}
       >
-        <Space size={12} style={{ flex: 1, minWidth: 0, overflow: 'hidden' }}>
-          <img src={logo} alt="STU" style={{ width: 108, height: 30, objectFit: 'contain', flexShrink: 0 }} />
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minWidth: 0
+          }}
+        >
+          <img
+            src={collapsed ? collapsedLogo : logo}
+            alt="STU"
+            style={{
+              width: collapsed ? 52 : 108,
+              height: collapsed ? 52 : 30,
+              objectFit: 'contain',
+              objectPosition: collapsed ? 'center center' : 'left center',
+              flexShrink: 0
+            }}
+          />
+        </div>
+
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            minWidth: 0,
+            paddingLeft: 35,
+            overflow: 'hidden'
+          }}
+        >
           <Text
             strong
             style={{
               fontSize: 16,
               color: '#1C3D66',
-              flex: 1,
               minWidth: 0,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -480,7 +598,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           >
             Smart Feedback - Teaching Quality Dashboard
           </Text>
-        </Space>
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexShrink: 0 }}>
           <Select
@@ -531,8 +649,8 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
         style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: collapsed ? 'flex-start' : 'center',
-          paddingLeft: collapsed ? 8 : 0,
+          justifyContent: 'center',
+          paddingLeft: 0,
           minWidth: 0
         }}
       >
@@ -540,10 +658,10 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           src={collapsed ? collapsedLogo : logo}
           alt="STU"
           style={{
-            width: collapsed ? 44 : 170,
-            height: collapsed ? 44 : 34,
+            width: collapsed ? 52 : 170,
+            height: collapsed ? 52 : 34,
             objectFit: 'contain',
-            objectPosition: 'left center',
+            objectPosition: collapsed ? 'center center' : 'left center',
             flexShrink: 0
           }}
         />
@@ -554,14 +672,25 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           display: 'flex',
           alignItems: 'center',
           minWidth: 0,
-          paddingLeft: 20
+          paddingLeft: 20,
+          overflow: 'hidden'
         }}
       >
-        <Text strong style={{ fontSize: 18, color: '#1C3D66', whiteSpace: 'nowrap', flexShrink: 0 }}>
+        <Text
+          strong
+          style={{
+            fontSize: 18,
+            color: '#1C3D66',
+            whiteSpace: 'nowrap',
+            flexShrink: 1,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis'
+          }}
+        >
           Smart Feedback - Teaching Quality Dashboard
         </Text>
       </div>
-
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, flexShrink: 0 }}>
         <Select
           aria-label="Chọn học kỳ"

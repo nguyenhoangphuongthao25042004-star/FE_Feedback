@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Alert, Button, Card, Space, Spin, Table, Tag, Typography } from 'antd'
+import { Alert, Button, Card, Grid, Space, Spin, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
 
@@ -16,7 +16,24 @@ const cardStyle = {
   boxShadow: '0 8px 20px rgba(0, 45, 109, 0.08)'
 } as const
 
+const mobileInfoLabelStyle = {
+  color: '#7A8CA5',
+  fontSize: 12,
+  display: 'block'
+} as const
+
+const mobileInfoValueStyle = {
+  color: '#163253',
+  fontSize: 16,
+  fontWeight: 600,
+  lineHeight: 1.5
+} as const
+
 export default function FeedbackHistoryPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
+  const isTablet = Boolean(screens.md && !screens.xl)
+  const shouldUseCardLayout = isMobile || isTablet
   const selectedSemester = useUiStore((state) => state.selectedSemester)
   const searchKeyword = useUiStore((state) => state.searchKeyword)
   const [courseScoreSortOrder, setCourseScoreSortOrder] = useState<string | null>(null)
@@ -206,6 +223,95 @@ export default function FeedbackHistoryPage() {
           <div style={{ minHeight: 260, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Spin size="large" />
           </div>
+        ) : shouldUseCardLayout ? (
+          <div style={{ display: 'grid', gridTemplateColumns: isTablet ? 'repeat(2, minmax(0, 1fr))' : '1fr', gap: 16 }}>
+            {tableData.length === 0 ? (
+              <div style={{ minHeight: 220, display: 'flex', alignItems: 'center', justifyContent: 'center', gridColumn: '1 / -1' }}>
+                <Typography.Text style={{ color: '#5B6B82' }}>Chưa có dữ liệu lịch sử phản hồi.</Typography.Text>
+              </div>
+            ) : tableData.map((item) => (
+              <Card
+                key={item.id}
+                size="small"
+                style={{
+                  borderRadius: 18,
+                  border: '1px solid #D7E1F0',
+                  boxShadow: '0 8px 18px rgba(0, 45, 109, 0.06)'
+                }}
+                bodyStyle={{ padding: 16 }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <Typography.Text strong style={{ color: '#163253', fontSize: 20, lineHeight: 1.4 }}>
+                      {item.subject}
+                    </Typography.Text>
+                    <Typography.Text style={{ color: '#42546B', fontSize: 15 }}>
+                      Giảng viên: {item.instructor}
+                    </Typography.Text>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+                      gap: 12
+                    }}
+                  >
+                    <div>
+                      <Typography.Text style={mobileInfoLabelStyle}>Ngày gửi</Typography.Text>
+                      <Typography.Text style={mobileInfoValueStyle}>
+                        {dayjs(item.submittedAt).format('DD/MM/YYYY')}
+                      </Typography.Text>
+                    </div>
+
+                    <div>
+                      <Typography.Text style={mobileInfoLabelStyle}>Trạng thái</Typography.Text>
+                      <div style={{ marginTop: 4 }}>
+                        <Tag
+                          style={
+                            item.status === 'submitted'
+                              ? undefined
+                              : {
+                                background: '#FFF7E6',
+                                color: '#D48806',
+                                borderColor: '#FFD591',
+                                borderRadius: 999,
+                                paddingInline: 12
+                              }
+                          }
+                          color={item.status === 'submitted' ? 'green' : undefined}
+                        >
+                          {item.status === 'submitted' ? 'Đã phản hồi' : 'Chưa phản hồi'}
+                        </Tag>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Typography.Text style={mobileInfoLabelStyle}>Điểm tổng thể môn</Typography.Text>
+                      <Typography.Text style={mobileInfoValueStyle}>
+                        {item.courseOverallScore.toFixed(1)}/5
+                      </Typography.Text>
+                    </div>
+
+                    <div>
+                      <Typography.Text style={mobileInfoLabelStyle}>Điểm giảng viên</Typography.Text>
+                      <Typography.Text style={mobileInfoValueStyle}>
+                        {item.instructorOverallScore.toFixed(1)}/5
+                      </Typography.Text>
+                    </div>
+                  </div>
+
+                  <Button
+                    icon={<EyeOutlined />}
+                    onClick={() => handleView(item)}
+                    style={{ borderRadius: 999, alignSelf: 'flex-start' }}
+                  >
+                    Xem chi tiết
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
         ) : (
           <Table<FeedbackHistory>
             rowKey="id"
@@ -241,3 +347,4 @@ export default function FeedbackHistoryPage() {
     </div>
   )
 }
+

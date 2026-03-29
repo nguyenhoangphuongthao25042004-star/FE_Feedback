@@ -1,6 +1,6 @@
-import { useMemo, useState } from 'react'
+﻿import { useMemo, useState } from 'react'
 import { EyeOutlined } from '@ant-design/icons'
-import { Alert, Button, Card, Table, Tag, Typography } from 'antd'
+import { Alert, Button, Card, Grid, Space, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
 
@@ -27,6 +27,10 @@ const statusTagStyleMap: Record<Course['feedbackStatus'], { label: string, backg
 }
 
 export default function CoursesPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
+  const isTablet = Boolean(screens.md && !screens.xl)
+  const shouldUseCardLayout = isMobile || isTablet
   const navigate = useNavigate()
   const selectedSemester = useUiStore((state) => state.selectedSemester)
   const searchKeyword = useUiStore((state) => state.searchKeyword)
@@ -280,54 +284,155 @@ export default function CoursesPage() {
           boxShadow: '0 12px 28px rgba(0, 45, 109, 0.08)'
         }}
       >
-        <Table<Course>
-          rowKey="id"
-          loading={isLoading}
-          columns={columns}
-          dataSource={courses}
-          onChange={(_, filters) => {
-            const courseResultFilters = filters.courseResult as string[] | null
-            const difficultyFilters = filters.difficultyLevel as string[] | null
-            const feedbackStatusFilters = filters.feedbackStatus as string[] | null
-            const courseScoreFilters = filters.courseScore as string[] | null
-            const instructorScoreFilters = filters.instructorScore as string[] | null
+        {shouldUseCardLayout ? (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isTablet ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+              gap: 16
+            }}
+          >
+            {courses.map((course) => (
+              <Card
+                key={course.id}
+                size="small"
+                style={{
+                  borderRadius: 18,
+                  border: '1px solid #D7E1F0',
+                  boxShadow: '0 8px 18px rgba(0, 45, 109, 0.06)'
+                }}
+                bodyStyle={{ padding: 16 }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <Typography.Text strong style={{ color: '#163253', fontSize: 20, lineHeight: 1.45 }}>
+                      {course.subject}
+                    </Typography.Text>
+                    <Typography.Text
+                      style={{
+                        color: '#163253',
+                        fontSize: 15,
+                        lineHeight: 1.5,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}
+                    >
+                      Giảng viên: {course.instructor}
+                    </Typography.Text>
+                  </div>
 
-            if (courseResultFilters && courseResultFilters.length > 0) {
-              setCourseResultFilter(courseResultFilters[0])
-            } else {
-              setCourseResultFilter(null)
-            }
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                    <Tag
+                      style={{
+                        background: difficultyTagStyleMap[course.difficultyLevel].background,
+                        color: difficultyTagStyleMap[course.difficultyLevel].color,
+                        borderColor: difficultyTagStyleMap[course.difficultyLevel].borderColor,
+                        borderRadius: 999,
+                        paddingInline: 12
+                      }}
+                    >
+                      {difficultyLabelMap[course.difficultyLevel]}
+                    </Tag>
+                    <Tag
+                      style={{
+                        background: statusTagStyleMap[course.feedbackStatus].background,
+                        color: statusTagStyleMap[course.feedbackStatus].color,
+                        borderColor: statusTagStyleMap[course.feedbackStatus].borderColor,
+                        borderRadius: 999,
+                        paddingInline: 12
+                      }}
+                    >
+                      {statusTagStyleMap[course.feedbackStatus].label}
+                    </Tag>
+                  </div>
 
-            if (difficultyFilters && difficultyFilters.length > 0) {
-              setDifficultyFilter(difficultyFilters[0])
-            } else {
-              setDifficultyFilter(null)
-            }
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                    <div>
+                      <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>
+                        Kết quả môn học
+                      </Typography.Text>
+                      <Typography.Text style={{ color: '#163253', fontSize: 15 }}>
+                        {course.courseResult === 'pass' ? 'Đạt' : 'Không đạt'}
+                      </Typography.Text>
+                    </div>
+                    <div>
+                      <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>
+                        Điểm môn học
+                      </Typography.Text>
+                      <Typography.Text style={{ color: '#163253', fontSize: 15 }}>
+                        {course.courseScore.toFixed(1)}
+                      </Typography.Text>
+                    </div>
+                    <div>
+                      <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>
+                        Điểm giảng viên
+                      </Typography.Text>
+                      <Typography.Text style={{ color: '#163253', fontSize: 15 }}>
+                        {course.instructorScore.toFixed(1)}/5
+                      </Typography.Text>
+                    </div>
+                  </div>
 
-            if (feedbackStatusFilters && feedbackStatusFilters.length > 0) {
-              setFeedbackStatusFilter(feedbackStatusFilters[0])
-            } else {
-              setFeedbackStatusFilter(null)
-            }
-            
-            if (courseScoreFilters && courseScoreFilters.length > 0) {
-              setCourseScoreSortOrder(courseScoreFilters[0])
-            } else {
-              setCourseScoreSortOrder(null)
-            }
-            
-            if (instructorScoreFilters && instructorScoreFilters.length > 0) {
-              setInstructorScoreSortOrder(instructorScoreFilters[0])
-            } else {
-              setInstructorScoreSortOrder(null)
-            }
-          }}
-          pagination={{
-            pageSize: 6,
-            showSizeChanger: false
-          }}
-          scroll={{ x: 1100 }}
-        />
+                  <Space>
+                    <Button icon={<EyeOutlined />} onClick={() => navigate(`/student/course/${course.id}`)}>
+                      Xem chi tiết
+                    </Button>
+                  </Space>
+                </div>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <Table<Course>
+            rowKey="id"
+            loading={isLoading}
+            columns={columns}
+            dataSource={courses}
+            onChange={(_, filters) => {
+              const courseResultFilters = filters.courseResult as string[] | null
+              const difficultyFilters = filters.difficultyLevel as string[] | null
+              const feedbackStatusFilters = filters.feedbackStatus as string[] | null
+              const courseScoreFilters = filters.courseScore as string[] | null
+              const instructorScoreFilters = filters.instructorScore as string[] | null
+
+              if (courseResultFilters && courseResultFilters.length > 0) {
+                setCourseResultFilter(courseResultFilters[0])
+              } else {
+                setCourseResultFilter(null)
+              }
+
+              if (difficultyFilters && difficultyFilters.length > 0) {
+                setDifficultyFilter(difficultyFilters[0])
+              } else {
+                setDifficultyFilter(null)
+              }
+
+              if (feedbackStatusFilters && feedbackStatusFilters.length > 0) {
+                setFeedbackStatusFilter(feedbackStatusFilters[0])
+              } else {
+                setFeedbackStatusFilter(null)
+              }
+
+              if (courseScoreFilters && courseScoreFilters.length > 0) {
+                setCourseScoreSortOrder(courseScoreFilters[0])
+              } else {
+                setCourseScoreSortOrder(null)
+              }
+
+              if (instructorScoreFilters && instructorScoreFilters.length > 0) {
+                setInstructorScoreSortOrder(instructorScoreFilters[0])
+              } else {
+                setInstructorScoreSortOrder(null)
+              }
+            }}
+            pagination={{
+              pageSize: 6,
+              showSizeChanger: false
+            }}
+            scroll={{ x: 1100 }}
+          />
+        )}
       </Card>
     </div>
   )

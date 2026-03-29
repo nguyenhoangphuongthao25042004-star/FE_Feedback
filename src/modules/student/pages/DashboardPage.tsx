@@ -157,6 +157,8 @@ export default function DashboardPage() {
     }
   }, [filteredScores])
 
+  const totalSubjectsInSemester = semesterFilteredScores.length
+
   // Bấm thử lại khi ở trạng thái lỗi
   const handleRetry = () => {
     setViewState('loading')
@@ -217,9 +219,9 @@ export default function DashboardPage() {
 
     currentY += 8
     pdf.setFont('ArialCustom', 'normal')
-    pdf.text(`Số môn: ${visibleSummary.totalSubjects}`, 14, currentY)
+    pdf.text(`Số môn đã phản hồi: ${visibleSummary.totalSubjects}/${totalSubjectsInSemester} môn`, 14, currentY)
     currentY += 6
-    pdf.text(`Điểm hài lòng trung bình: ${visibleSummary.avgScore}`, 14, currentY)
+    pdf.text(`Điểm hài lòng trung bình: ${visibleSummary.avgScore}/5`, 14, currentY)
     currentY += 6
     pdf.text(`Môn được đánh giá cao nhất: ${visibleSummary.bestSubject}`, 14, currentY)
     currentY += 6
@@ -238,7 +240,7 @@ export default function DashboardPage() {
         currentY = 18
       }
 
-      pdf.text(`${index + 1}. ${item.subject} - ${item.semester} - Diem: ${item.score}`, 14, currentY)
+      pdf.text(`${index + 1}. ${item.subject} - ${item.semester} - Điểm: ${item.score}/5`, 14, currentY)
       currentY += 6
     })
 
@@ -427,10 +429,10 @@ export default function DashboardPage() {
             }}
           >
             <Row gutter={[16, 16]}>
-              <Col xs={24} sm={12} xl={6}><StatCard title="Số môn" value={visibleSummary.totalSubjects} /></Col>
-              <Col xs={24} sm={12} xl={6}><StatCard title="Điểm hài lòng trung bình" value={visibleSummary.avgScore} /></Col>
+              <Col xs={24} sm={12} xl={6}><StatCard title="Số môn đã phản hồi" value={`${visibleSummary.totalSubjects}/${totalSubjectsInSemester} môn`} /></Col>
+              <Col xs={24} sm={12} xl={6}><StatCard title="Điểm hài lòng trung bình" value={`${visibleSummary.avgScore}/5`} /></Col>
               <Col xs={24} sm={12} xl={6}><StatCard title="Môn được đánh giá cao nhất" value={visibleSummary.bestSubject} /></Col>
-              <Col xs={24} sm={12} xl={6}><StatCard title="Số môn có cảnh báo độ khó cao" value={visibleSummary.difficultSubjects} /></Col>
+              <Col xs={24} sm={12} xl={6}><StatCard title="Số môn có cảnh báo độ khó cao" value={`${visibleSummary.difficultSubjects} môn`} /></Col>
             </Row>
 
             <Row gutter={[16, 16]} align="stretch">

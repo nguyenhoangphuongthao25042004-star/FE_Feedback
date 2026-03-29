@@ -28,10 +28,8 @@ const FALLBACK_QUALITY_INDEX: QualityIndexData = {
     trendPercent: 3.2
   },
   trend: [
-    { semester: '2025-HK1', teachingQualityIndex: 4.16, facultyAverage: 3.87 },
-    { semester: '2025-HK2', teachingQualityIndex: 4.28, facultyAverage: 3.96 },
-    { semester: '2026-HK1', teachingQualityIndex: 4.32, facultyAverage: 4.01 },
-    { semester: '2026-HK2', teachingQualityIndex: 4.46, facultyAverage: 4.08 }
+    { semester: '2025-2026-HK1', teachingQualityIndex: 4.28, facultyAverage: 3.96 },
+    { semester: '2025-2026-HK2', teachingQualityIndex: 4.46, facultyAverage: 4.08 }
   ]
 }
 

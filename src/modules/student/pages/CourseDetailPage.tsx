@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+﻿import { useMemo } from 'react'
 import { ArrowLeftOutlined, CheckCircleOutlined, InfoCircleOutlined, WarningOutlined } from '@ant-design/icons'
 import {
 	Alert,
@@ -6,6 +6,7 @@ import {
 	Card,
 	Col,
 	Empty,
+	Grid,
 	Row,
 	Space,
 	Spin,
@@ -95,6 +96,9 @@ function KpiCard({ title, value, extra }: KpiCardProps) {
 }
 
 export default function CourseDetailPage() {
+	const screens = Grid.useBreakpoint()
+	const isMobile = !screens.md
+	const isTablet = Boolean(screens.md && !screens.xl)
 	const navigate = useNavigate()
 	const params = useParams()
 	const courseId = params.courseId ?? ''
@@ -147,16 +151,19 @@ export default function CourseDetailPage() {
 	}
 
 	const difficultyStyle = difficultyStyleMap[data.kpis.difficultyLevel]
+	const stickyHeaderTop = isMobile ? 120 : 88
 
 	return (
 		<div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-			<Card style={baseCardStyle}>
-				<div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+			<div style={{ position: 'sticky', top: stickyHeaderTop, zIndex: 30 }}>
+				<Card style={baseCardStyle}>
+					<div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
 					<Button
-						shape="circle"
-						size="large"
 						icon={<ArrowLeftOutlined />}
 						onClick={() => navigate('/student/courses')}
+						shape="circle"
+						size="large"
+						style={{ borderRadius: 999, width: 44, height: 44, minWidth: 44 }}
 						aria-label="Quay lại môn học của tôi"
 					/>
 
@@ -166,7 +173,7 @@ export default function CourseDetailPage() {
 							style={{
 								margin: 0,
 								color: '#163253',
-								fontSize: 32,
+								fontSize: isMobile ? 28 : isTablet ? 30 : 32,
 								fontWeight: 800,
 								letterSpacing: 0.4
 							}}
@@ -208,128 +215,133 @@ export default function CourseDetailPage() {
 						</Space>
 					</Space>
 				</div>
-			</Card>
+				</Card>
+			</div>
+			<div style={{ maxHeight: 'calc(100vh - 240px)', overflow: 'auto', paddingRight: 8 }}>
+				<div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+					<Row gutter={[24, 20]} align="stretch">
+						<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
+							<KpiCard title="Điểm tổng thể môn" value={data.kpis.overallCourseScore.toFixed(1)} />
+						</Col>
+						<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
+							<KpiCard
+								title="Điểm giảng viên"
+								value={`${data.kpis.instructorScore.toFixed(1)}/5`}
+							/>
+						</Col>
+						<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
+							<KpiCard
+								title="Độ khó"
+								value={difficultyStyle.label}
+							/>
+						</Col>
+						<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
+							<KpiCard title="Độ phù hợp phong cách học" value={`${data.kpis.learningStyleFitPercent}%`} />
+						</Col>
+					</Row>
 
-			<Row gutter={[24, 20]} align="stretch">
-				<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-					<KpiCard title="Điểm tổng thể môn" value={data.kpis.overallCourseScore.toFixed(1)} />
-				</Col>
-				<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-					<KpiCard
-						title="Điểm giảng viên"
-						value={`${data.kpis.instructorScore.toFixed(1)}/5`}
-					/>
-				</Col>
-				<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-					<KpiCard
-						title="Độ khó"
-						value={difficultyStyle.label}
-					/>
-				</Col>
-				<Col xs={24} sm={12} xl={6} style={{ display: 'flex' }}>
-					<KpiCard title="Độ phù hợp phong cách học" value={`${data.kpis.learningStyleFitPercent}%`} />
-				</Col>
-			</Row>
+					<Row gutter={[16, 16]}>
+						<Col xs={24} xl={12}>
+							<Card style={baseCardStyle}>
+								<Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12, color: '#163253' }}>
+									Biểu đồ chất lượng môn học
+								</Typography.Title>
+								<div style={{ width: '100%', height: 320 }}>
+									<ResponsiveContainer>
+										<RadarChart data={data.qualityRadar}>
+											<PolarGrid stroke="#D7E1F0" />
+											<PolarAngleAxis dataKey="metric" tick={{ fill: '#42546B', fontSize: 12 }} />
+											<Radar
+												name="Chất lượng"
+												dataKey="score"
+												stroke="#004286"
+												fill="#5D8CC7"
+												fillOpacity={0.35}
+												strokeWidth={2}
+											/>
+											<Tooltip />
+										</RadarChart>
+									</ResponsiveContainer>
+								</div>
+							</Card>
+						</Col>
 
-			<Row gutter={[16, 16]}>
-				<Col xs={24} xl={12}>
-					<Card style={baseCardStyle}>
-						<Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12, color: '#163253' }}>
-							Biểu đồ chất lượng môn học
-						</Typography.Title>
-						<div style={{ width: '100%', height: 320 }}>
-							<ResponsiveContainer>
-								<RadarChart data={data.qualityRadar}>
-									<PolarGrid stroke="#D7E1F0" />
-									<PolarAngleAxis dataKey="metric" tick={{ fill: '#42546B', fontSize: 12 }} />
-									<Radar
-										name="Chất lượng"
-										dataKey="score"
-										stroke="#004286"
-										fill="#5D8CC7"
-										fillOpacity={0.35}
-										strokeWidth={2}
-									/>
-									<Tooltip />
-								</RadarChart>
-							</ResponsiveContainer>
-						</div>
-					</Card>
-				</Col>
+						<Col xs={24} xl={12}>
+							<Card style={baseCardStyle}>
+								<Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12, color: '#163253' }}>
+									Đánh giá từng yếu tố giảng dạy
+								</Typography.Title>
+								<div style={{ width: '100%', height: 320 }}>
+									<ResponsiveContainer>
+										<BarChart data={data.instructorBars} margin={{ left: 8, right: 8 }}>
+											<CartesianGrid strokeDasharray="3 3" stroke="#E3EAF5" />
+											<XAxis dataKey="factor" tick={{ fill: '#42546B', fontSize: 12 }} />
+											<YAxis domain={[0, 5]} tick={{ fill: '#42546B', fontSize: 12 }} />
+											<Tooltip />
+											<Bar dataKey="score" radius={[8, 8, 0, 0]} fill="#2F5E9E" />
+										</BarChart>
+									</ResponsiveContainer>
+								</div>
+							</Card>
+						</Col>
+					</Row>
 
-				<Col xs={24} xl={12}>
-					<Card style={baseCardStyle}>
-						<Typography.Title level={4} style={{ marginTop: 0, marginBottom: 12, color: '#163253' }}>
-							Đánh giá từng yếu tố giảng dạy
-						</Typography.Title>
-						<div style={{ width: '100%', height: 320 }}>
-							<ResponsiveContainer>
-								<BarChart data={data.instructorBars} margin={{ left: 8, right: 8 }}>
-									<CartesianGrid strokeDasharray="3 3" stroke="#E3EAF5" />
-									<XAxis dataKey="factor" tick={{ fill: '#42546B', fontSize: 12 }} />
-									<YAxis domain={[0, 5]} tick={{ fill: '#42546B', fontSize: 12 }} />
-									<Tooltip />
-									<Bar dataKey="score" radius={[8, 8, 0, 0]} fill="#2F5E9E" />
-								</BarChart>
-							</ResponsiveContainer>
-						</div>
-					</Card>
-				</Col>
-			</Row>
-
-			<Row gutter={[20, 20]}>
-				<Col xs={24} lg={8} style={{ display: 'flex' }}>
-					<Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
-						<Alert
-							type="success"
-							showIcon
-							icon={<CheckCircleOutlined />}
-							  message="Điểm mạnh"
-							description={
-								<ul style={{ margin: 0, paddingLeft: 18 }}>
-									{data.insight.strengths.map((item) => (
-										<li key={item}>{item}</li>
-									))}
-								</ul>
-							}
-						/>
-					</Card>
-				</Col>
-				<Col xs={24} lg={8} style={{ display: 'flex' }}>
-					<Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
-						<Alert
-							type="error"
-							showIcon
-							icon={<WarningOutlined />}
-							  message="Điểm hạn chế"
-							description={
-								<ul style={{ margin: 0, paddingLeft: 18 }}>
-									{data.insight.limitations.map((item) => (
-										<li key={item}>{item}</li>
-									))}
-								</ul>
-							}
-						/>
-					</Card>
-				</Col>
-				<Col xs={24} lg={8} style={{ display: 'flex' }}>
-					<Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
-						<Alert
-							type="info"
-							showIcon
-							icon={<InfoCircleOutlined />}
-							  message="Gợi ý học tập"
-							description={
-								<ul style={{ margin: 0, paddingLeft: 18 }}>
-									{data.insight.suggestions.map((item) => (
-										<li key={item}>{item}</li>
-									))}
-								</ul>
-							}
-						/>
-					</Card>
-				</Col>
-			</Row>
+					<Row gutter={[20, 20]}>
+						<Col xs={24} md={12} xl={8} style={{ display: 'flex' }}>
+							<Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
+								<Alert
+									type="success"
+									showIcon
+									icon={<CheckCircleOutlined />}
+									  message="Điểm mạnh"
+									description={
+										<ul style={{ margin: 0, paddingLeft: 18 }}>
+											{data.insight.strengths.map((item) => (
+												<li key={item}>{item}</li>
+											))}
+										</ul>
+									}
+								/>
+							</Card>
+						</Col>
+						<Col xs={24} md={12} xl={8} style={{ display: 'flex' }}>
+							<Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
+								<Alert
+									type="error"
+									showIcon
+									icon={<WarningOutlined />}
+									  message="Điểm hạn chế"
+									description={
+										<ul style={{ margin: 0, paddingLeft: 18 }}>
+											{data.insight.limitations.map((item) => (
+												<li key={item}>{item}</li>
+											))}
+										</ul>
+									}
+								/>
+							</Card>
+						</Col>
+						<Col xs={24} md={24} xl={8} style={{ display: 'flex' }}>
+							<Card style={{ ...baseCardStyle, width: '100%', height: '100%' }}>
+								<Alert
+									type="info"
+									showIcon
+									icon={<InfoCircleOutlined />}
+									  message="Gợi ý học tập"
+									description={
+										<ul style={{ margin: 0, paddingLeft: 18 }}>
+											{data.insight.suggestions.map((item) => (
+												<li key={item}>{item}</li>
+											))}
+										</ul>
+									}
+								/>
+							</Card>
+						</Col>
+					</Row>
+				</div>
+			</div>
 		</div>
 	)
 }
+

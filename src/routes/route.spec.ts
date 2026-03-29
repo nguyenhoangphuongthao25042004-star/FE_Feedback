@@ -14,7 +14,7 @@ export type RouteSpecItem = {
 
 // Danh sách route đối chiếu với tài liệu đặc tả
 export const routeSpec: RouteSpecItem[] = [
-  { vaiTro: 'Công khai', path: '/login', tenHienThi: 'Đăng nhập', manHinh: 'Màn hình đăng nhập', componentTrang: 'LoginPage', layout: 'Không dùng layout sau đăng nhập', api: ['/api/auth/login'] },
+  { vaiTro: 'Công khai', path: '/login', tenHienThi: 'Đăng nhập', manHinh: 'Màn hình đăng nhập', componentTrang: 'LoginPage', layout: 'Không dùng layout sau đăng nhập', api: ['/api/student/login', '/api/instructor/login'] },
   { vaiTro: 'Sinh viên', path: '/student/dashboard', tenHienThi: 'Tổng quan', manHinh: 'Student Dashboard', componentTrang: 'DashboardPage', layout: 'StudentLayout', api: ['/api/student/dashboard', '/api/student/study-profile', '/api/student/recommendations'] },
   { vaiTro: 'Sinh viên', path: '/student/feedback/new', tenHienThi: 'Gửi phản hồi', manHinh: 'Màn hình Gửi phản hồi', componentTrang: 'FeedbackFormPage', layout: 'StudentLayout', api: ['/api/form/metadata', '/api/feedback/submit'] },
   { vaiTro: 'Sinh viên', path: '/student/courses', tenHienThi: 'Môn học của tôi', manHinh: 'Màn hình Môn học của tôi', componentTrang: 'CoursesPage', layout: 'StudentLayout', api: ['/api/student/courses'] },
@@ -34,3 +34,6 @@ export const routeSpec: RouteSpecItem[] = [
   { vaiTro: 'Quản trị/Khoa', path: '/admin/data-quality', tenHienThi: 'Chất lượng dữ liệu', manHinh: 'Màn hình Chất lượng dữ liệu khảo sát', componentTrang: 'DataQualityPage', layout: 'AdminLayout', api: ['/api/admin/data-quality'] },
   { vaiTro: 'Quản trị/Khoa', path: '/admin/reports', tenHienThi: 'Báo cáo', manHinh: 'Màn hình Báo cáo', componentTrang: 'ReportsPage', layout: 'AdminLayout', api: [] }
 ]
+
+
+

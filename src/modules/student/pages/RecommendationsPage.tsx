@@ -1,14 +1,14 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Button, Col, Empty, Result, Row, Select, Space, Spin, Typography } from 'antd'
+﻿import { useEffect, useMemo, useState } from 'react'
+import { Button, Col, Empty, Grid, Result, Row, Select, Space, Spin, Typography } from 'antd'
 
 import StatCard from '../../../components/layout/StatCard'
 import RecommendationItemCard from '../components/RecommendationItemCard'
 import type { RecommendationData, RecommendationPriority, RecommendationStatus } from '../types/student.types'
 
-// 4 trạng thái chính của trang gợi ý
+// 4 tráº¡ng thÃ¡i chÃ­nh cá»§a trang gá»£i Ã½
 type ViewState = 'loading' | 'success' | 'empty' | 'error'
 
-// Dữ liệu giả cho trang gợi ý học tập
+// Dá»¯ liá»‡u giáº£ cho trang gá»£i Ã½ há»c táº­p
 const mockRecommendationData: RecommendationData = {
   suitableSubjects: 'Xây dựng phần mềm web',
   needImprove: ['Xây dựng phần mềm thiết bị di động'],
@@ -53,7 +53,7 @@ const mockRecommendationData: RecommendationData = {
   ]
 }
 
-// Style dùng lại cho card trạng thái và khối header
+// Style dÃ¹ng láº¡i cho card tráº¡ng thÃ¡i vÃ  khá»‘i header
 const statusCardStyle = {
   background: '#FFFFFF',
   border: '1px solid #D7E1F0',
@@ -62,22 +62,24 @@ const statusCardStyle = {
   boxShadow: '0 14px 30px rgba(28, 61, 102, 0.08)'
 } as const
 
-// Style cho khối header giới thiệu trang
+// Style cho khá»‘i header giá»›i thiá»‡u trang
 const headerStyle = {
   ...statusCardStyle,
   marginBottom: 16
 } as const
 
-// Trang gợi ý học tập cho sinh viên
+// Trang gá»£i Ã½ há»c táº­p cho sinh viÃªn
 export default function RecommendationsPage() {
-  const mockFinalState: ViewState = 'success' // đổi giá trị này nếu muốn thử loading empty error
+  const mockFinalState: ViewState = 'success' // Ä‘á»•i giÃ¡ trá»‹ nÃ y náº¿u muá»‘n thá»­ loading empty error
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
 
-  const [viewState, setViewState] = useState<ViewState>('loading') // trạng thái hiển thị trang
-  const [selectedPriority, setSelectedPriority] = useState<RecommendationPriority | 'all'>('all') // lọc theo mức ưu tiên
-  // Thêm filter trạng thái tương ứng với các "thanh màu xanh" (Chưa hoàn thành / Đã hoàn thành)
-  const [selectedStatus, setSelectedStatus] = useState<RecommendationStatus | 'all'>('all') // mặc định: tất cả trạng thái
+  const [viewState, setViewState] = useState<ViewState>('loading') // tráº¡ng thÃ¡i hiá»ƒn thá»‹ trang
+  const [selectedPriority, setSelectedPriority] = useState<RecommendationPriority | 'all'>('all') // lá»c theo má»©c Æ°u tiÃªn
+  // ThÃªm filter tráº¡ng thÃ¡i tÆ°Æ¡ng á»©ng vá»›i cÃ¡c "thanh mÃ u xanh" (ChÆ°a hoÃ n thÃ nh / ÄÃ£ hoÃ n thÃ nh)
+  const [selectedStatus, setSelectedStatus] = useState<RecommendationStatus | 'all'>('all') // máº·c Ä‘á»‹nh: táº¥t cáº£ tráº¡ng thÃ¡i
 
-  // Mô phỏng quá trình tải dữ liệu khi vào trang
+  // MÃ´ phá»ng quÃ¡ trÃ¬nh táº£i dá»¯ liá»‡u khi vÃ o trang
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setViewState(mockFinalState)
@@ -86,7 +88,7 @@ export default function RecommendationsPage() {
     return () => window.clearTimeout(timer)
   }, [mockFinalState])
 
-  // Danh sách lựa chọn cho bộ lọc mức ưu tiên
+  // Danh sÃ¡ch lá»±a chá»n cho bá»™ lá»c má»©c Æ°u tiÃªn
   const priorityOptions = [
     { value: 'all', label: 'Tất cả mức ưu tiên' },
     { value: 'high', label: 'Ưu tiên cao' },
@@ -94,16 +96,16 @@ export default function RecommendationsPage() {
     { value: 'low', label: 'Ưu tiên thấp' }
   ]
 
-  // (Đã loại bỏ filter trạng thái theo yêu cầu)
+  // (ÄÃ£ loáº¡i bá» filter tráº¡ng thÃ¡i theo yÃªu cáº§u)
 
-  // Danh sách lựa chọn cho bộ lọc trạng thái (chỉ hai lựa chọn theo yêu cầu)
+  // Danh sÃ¡ch lá»±a chá»n cho bá»™ lá»c tráº¡ng thÃ¡i (chá»‰ hai lá»±a chá»n theo yÃªu cáº§u)
   const statusOptions = [
     { value: 'all', label: 'Tất cả trạng thái' },
     { value: 'pending', label: 'Chưa hoàn thành' },
     { value: 'done', label: 'Đã hoàn thành' }
   ]
 
-  // Lọc danh sách gợi ý theo mức ưu tiên và trạng thái
+  // Lá»c danh sÃ¡ch gá»£i Ã½ theo má»©c Æ°u tiÃªn vÃ  tráº¡ng thÃ¡i
   const filteredRecommendations = useMemo(() => {
     return mockRecommendationData.items.filter((item) => {
       const matchPriority = selectedPriority === 'all' || item.priority === selectedPriority
@@ -112,13 +114,13 @@ export default function RecommendationsPage() {
     })
   }, [selectedPriority, selectedStatus])
 
-  // Tính toán các chỉ số KPI từ dữ liệu đã lọc
+  // TÃ­nh toÃ¡n cÃ¡c chá»‰ sá»‘ KPI tá»« dá»¯ liá»‡u Ä‘Ã£ lá»c
   const kpiSummary = useMemo(() => {
-    const totalRecommendations = mockRecommendationData.items.length // tổng số gợi ý
-    const highPriorityCount = mockRecommendationData.items.filter((item) => item.priority === 'high').length // số gợi ý ưu tiên cao
-    const completedCount = mockRecommendationData.items.filter((item) => item.status === 'done').length // số gợi ý hoàn thành
-    const completedPercentage = totalRecommendations > 0 ? Math.round((completedCount / totalRecommendations) * 100) : 0 // phần trăm hoàn thành
-    const improvementCount = mockRecommendationData.needImprove.length // số môn cần cải thiện
+    const totalRecommendations = mockRecommendationData.items.length // tá»•ng sá»‘ gá»£i Ã½
+    const highPriorityCount = mockRecommendationData.items.filter((item) => item.priority === 'high').length // sá»‘ gá»£i Ã½ Æ°u tiÃªn cao
+    const completedCount = mockRecommendationData.items.filter((item) => item.status === 'done').length // sá»‘ gá»£i Ã½ hoÃ n thÃ nh
+    const completedPercentage = totalRecommendations > 0 ? Math.round((completedCount / totalRecommendations) * 100) : 0 // pháº§n trÄƒm hoÃ n thÃ nh
+    const improvementCount = mockRecommendationData.needImprove.length // sá»‘ mÃ´n cáº§n cáº£i thiá»‡n
 
     return {
       totalRecommendations,
@@ -129,7 +131,7 @@ export default function RecommendationsPage() {
     }
   }, [])
 
-  // Bấm thử lại khi ở trạng thái lỗi
+  // Báº¥m thá»­ láº¡i khi á»Ÿ tráº¡ng thÃ¡i lá»—i
   const handleRetry = () => {
     setViewState('loading')
 
@@ -138,7 +140,7 @@ export default function RecommendationsPage() {
     }, 500)
   }
 
-  // Hiển thị trạng thái loading
+  // Hiá»ƒn thá»‹ tráº¡ng thÃ¡i loading
   if (viewState === 'loading') {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 500 }}>
@@ -147,7 +149,7 @@ export default function RecommendationsPage() {
     )
   }
 
-  // Hiển thị trạng thái lỗi
+  // Hiá»ƒn thá»‹ tráº¡ng thÃ¡i lá»—i
   if (viewState === 'error') {
     return (
       <Result
@@ -163,7 +165,7 @@ export default function RecommendationsPage() {
     )
   }
 
-  // Hiển thị trạng thái không có dữ liệu
+  // Hiá»ƒn thá»‹ tráº¡ng thÃ¡i khÃ´ng cÃ³ dá»¯ liá»‡u
   if (viewState === 'empty') {
     return (
       <div style={{ padding: '24px 0', minHeight: 'calc(100vh - 120px)', background: '#EEF3FB' }}>
@@ -179,10 +181,10 @@ export default function RecommendationsPage() {
     )
   }
 
-  // Hiển thị trang thành công
+  // Hiá»ƒn thá»‹ trang thÃ nh cÃ´ng
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* ===== Khối header giới thiệu trang + bộ lọc ===== */}
+      {/* ===== Khá»‘i header giá»›i thiá»‡u trang + bá»™ lá»c ===== */}
       <div style={headerStyle}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 16, marginBottom: 20, flexWrap: 'wrap' }}>
           <div>
@@ -206,26 +208,26 @@ export default function RecommendationsPage() {
               </Typography.Text>
             </Space>
           </div>
-          <Space size="large" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Space direction={isMobile ? 'vertical' : 'horizontal'} size={isMobile ? 12 : 'large'} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end', alignItems: isMobile ? 'stretch' : 'center', width: isMobile ? '100%' : 'auto' }}>
             <Select
               size="large"
               value={selectedPriority}
               onChange={setSelectedPriority}
               options={priorityOptions}
-              style={{ width: 220, height: 44, borderRadius: 12, fontSize: 16 }}
+              style={{ width: isMobile ? '100%' : 220, height: 44, borderRadius: 12, fontSize: 16 }}
             />
             <Select
               size="large"
               value={selectedStatus}
               onChange={setSelectedStatus}
               options={statusOptions}
-              style={{ width: 220, height: 44, borderRadius: 12, fontSize: 16 }}
+              style={{ width: isMobile ? '100%' : 220, height: 44, borderRadius: 12, fontSize: 16 }}
             />
           </Space>
         </div>
       </div>
 
-      {/* ===== Khối 4 thẻ KPI ===== */}
+      {/* ===== Khá»‘i 4 tháº» KPI ===== */}
       <Row gutter={[24, 24]} style={{ display: 'flex', flexDirection: 'row' }}>
         <Col xs={24} sm={12} lg={6}>
           <StatCard title="Tổng gợi ý" value={kpiSummary.totalRecommendations} />
@@ -241,7 +243,7 @@ export default function RecommendationsPage() {
         </Col>
       </Row>
 
-      {/* ===== Khối danh sách gợi ý chính ===== */}
+      {/* ===== Khá»‘i danh sÃ¡ch gá»£i Ã½ chÃ­nh ===== */}
       {filteredRecommendations.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           <h3 style={{ margin: 0, color: '#163253', fontSize: 18, fontWeight: 700 }}>
@@ -266,3 +268,4 @@ export default function RecommendationsPage() {
     </div>
   )
 }
+

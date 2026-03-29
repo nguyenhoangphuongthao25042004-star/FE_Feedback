@@ -22,7 +22,7 @@ export default function LineChartCard({ data }: { data: LinePoint[] }) {
       }}
     >
       <div style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: 0, color: '#163253', fontSize: 18 }}>TQI theo học kỳ</h3>
+        <h3 style={{ margin: 0, color: '#163253', fontSize: 18 }}>Chỉ số chất lượng giảng dạy theo học kỳ</h3>
         <div style={{ color: '#42546B', fontSize: 13, marginTop: 4 }}>Xu hướng chỉ số chất lượng theo các học kỳ</div>
       </div>
 

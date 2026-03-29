@@ -1,11 +1,10 @@
-// Kiểu dữ liệu cho từng cột điểm môn học trên dashboard
+﻿// Kiá»ƒu dá»¯ liá»‡u cho tá»«ng cá»™t Ä‘iá»ƒm mÃ´n há»c trÃªn dashboard
 export type DashboardScoreItem = {
   subject: string
   score: number
   semester: 'Học kỳ 1' | 'Học kỳ 2'
 }
-
-// Dữ liệu tổng quan dashboard sinh viên
+// Dá»¯ liá»‡u tá»•ng quan dashboard sinh viÃªn
 export type DashboardData = {
   totalSubjects: number
   avgScore: number
@@ -14,22 +13,22 @@ export type DashboardData = {
   scores: DashboardScoreItem[]
 }
 
-// Dữ liệu cho radar chart hồ sơ học tập
+// Dá»¯ liá»‡u cho radar chart há»“ sÆ¡ há»c táº­p
 export type StudyProfileItem = {
   name: string
   value: number
 }
 
-// Mức ưu tiên cho gợi ý học tập
+// Má»©c Æ°u tiÃªn cho gá»£i Ã½ há»c táº­p
 export type RecommendationPriority = 'high' | 'medium' | 'low'
 
-// Trạng thái hoàn thành gợi ý
+// Tráº¡ng thÃ¡i hoÃ n thÃ nh gá»£i Ã½
 export type RecommendationStatus = 'pending' | 'in_progress' | 'done'
 
-// Danh mục gợi ý
+// Danh má»¥c gá»£i Ã½
 export type RecommendationCategory = 'subject' | 'skill' | 'instructor' | 'study_method'
 
-// Một mục gợi ý học tập
+// Má»™t má»¥c gá»£i Ã½ há»c táº­p
 export type RecommendationItem = {
   id: string
   title: string
@@ -40,7 +39,7 @@ export type RecommendationItem = {
   status: RecommendationStatus
 }
 
-// Dữ liệu cho card gợi ý học tập
+// Dá»¯ liá»‡u cho card gá»£i Ã½ há»c táº­p
 export type RecommendationData = {
   suitableSubjects: string
   needImprove: string[]
@@ -48,19 +47,19 @@ export type RecommendationData = {
   items: RecommendationItem[]
 }
 
-// Option dùng chung cho dropdown và radio
+// Option dÃ¹ng chung cho dropdown vÃ  radio
 export type FeedbackMetadataOption = {
   label: string
   value: string
 }
 
-// Kiểu dữ liệu cho từng câu hỏi Likert
+// Kiá»ƒu dá»¯ liá»‡u cho tá»«ng cÃ¢u há»i Likert
 export type LikertQuestion = {
   key: string
   label: string
 }
 
-// Toàn bộ metadata cần để dựng form phản hồi
+// ToÃ n bá»™ metadata cáº§n Ä‘á»ƒ dá»±ng form pháº£n há»“i
 export type FeedbackMetadata = {
   semesters: FeedbackMetadataOption[]
   subjects: FeedbackMetadataOption[]
@@ -82,10 +81,10 @@ export type FeedbackMetadata = {
   likertQuestions: LikertQuestion[]
 }
 
-// Kiểu dữ liệu cho đáp án các câu hỏi Likert
+// Kiá»ƒu dá»¯ liá»‡u cho Ä‘Ã¡p Ã¡n cÃ¡c cÃ¢u há»i Likert
 export type FeedbackLikertAnswers = Record<string, number>
 
-// Giá trị đầy đủ của form phản hồi
+// GiÃ¡ trá»‹ Ä‘áº§y Ä‘á»§ cá»§a form pháº£n há»“i
 export type FeedbackFormValues = {
   semester: string
   subject: string
@@ -108,12 +107,12 @@ export type FeedbackFormValues = {
   requirementLevel: string
 }
 
-// Payload gửi lên khi lưu nháp hoặc submit
+// Payload gá»­i lÃªn khi lÆ°u nhÃ¡p hoáº·c submit
 export type FeedbackSubmitPayload = FeedbackFormValues & {
   status: 'draft' | 'submitted'
 }
 
-// Kiểu dữ liệu cho danh sách môn học của sinh viên
+// Kiá»ƒu dá»¯ liá»‡u cho danh sÃ¡ch mÃ´n há»c cá»§a sinh viÃªn
 export type StudentCourseItem = {
   id: string
   subject: string
@@ -126,7 +125,7 @@ export type StudentCourseItem = {
   status: string
 }
 
-// Kiểu dữ liệu cho lịch sử phản hồi
+// Kiá»ƒu dá»¯ liá»‡u cho lá»‹ch sá»­ pháº£n há»“i
 export type FeedbackHistoryItem = {
   id: string
   submittedAt: string
@@ -137,10 +136,10 @@ export type FeedbackHistoryItem = {
   status: string
 }
 
-// Trạng thái phản hồi trên màn lịch sử phản hồi
+// Tráº¡ng thÃ¡i pháº£n há»“i trÃªn mÃ n lá»‹ch sá»­ pháº£n há»“i
 export type FeedbackHistoryStatus = 'submitted' | 'draft'
 
-// Kiểu dữ liệu cho một bản ghi lịch sử phản hồi
+// Kiá»ƒu dá»¯ liá»‡u cho má»™t báº£n ghi lá»‹ch sá»­ pháº£n há»“i
 export interface FeedbackHistory {
   id: string
   courseId?: string
@@ -153,17 +152,17 @@ export interface FeedbackHistory {
   status: FeedbackHistoryStatus
 }
 
-// Kiểu dữ liệu cho object lỗi trả từ API
+// Kiá»ƒu dá»¯ liá»‡u cho object lá»—i tráº£ tá»« API
 export type ApiResponseErrorMap = Record<string, string>
 
-// Kiểu response thành công dùng chung
+// Kiá»ƒu response thÃ nh cÃ´ng dÃ¹ng chung
 export type ApiSuccessResponse<T> = {
   success: true
   message: string
   data: T
 }
 
-// Kiểu response lỗi dùng chung
+// Kiá»ƒu response lá»—i dÃ¹ng chung
 export type ApiErrorResponse = {
   success: false
   message: string

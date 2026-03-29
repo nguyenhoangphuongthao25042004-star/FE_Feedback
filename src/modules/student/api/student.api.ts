@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+﻿import { useQuery } from '@tanstack/react-query'
 
 import type {
   ApiSuccessResponse,
@@ -9,7 +9,12 @@ import type {
   RecommendationData,
   StudyProfileItem
 } from '../types/student.types'
-import { baseStudentCourses, getStudentFeedbackHistory, upsertFeedbackSubmission } from './feedbackData'
+import {
+  baseStudentCourses,
+  getStudentFeedbackHistory,
+  getStudentFeedbackSubmissionByCourseId,
+  upsertFeedbackSubmission
+} from './feedbackData'
 
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms))
 
@@ -20,7 +25,6 @@ const slugify = (value: string) => value
   .toLowerCase()
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/^-+|-+$/g, '')
-import { getStudentFeedbackSubmissionByCourseId } from './feedbackData'
 
 export const getDashboard = async (): Promise<ApiSuccessResponse<DashboardData>> => {
   await wait(300)
@@ -58,9 +62,9 @@ export const getStudyProfile = async (): Promise<ApiSuccessResponse<StudyProfile
     success: true,
     message: 'OK',
     data: [
-      { name: 'Lý thuyết', value: 70 },
-      { name: 'Thực hành', value: 80 },
-      { name: 'Tự học', value: 90 }
+      { name: 'LÃ½ thuyáº¿t', value: 70 },
+      { name: 'Thá»±c hÃ nh', value: 80 },
+      { name: 'Tá»± há»c', value: 90 }
     ]
   }
 }
@@ -72,44 +76,44 @@ export const getRecommendations = async (): Promise<ApiSuccessResponse<Recommend
     success: true,
     message: 'OK',
     data: {
-      suitableSubjects: 'Xây dựng phần mềm web',
-      needImprove: ['Xây dựng phần mềm thiết bị di động'],
-      suitableInstructors: ['Giảng viên A'],
+      suitableSubjects: 'XÃ¢y dá»±ng pháº§n má»m web',
+      needImprove: ['XÃ¢y dá»±ng pháº§n má»m thiáº¿t bá»‹ di Ä‘á»™ng'],
+      suitableInstructors: ['Giáº£ng viÃªn A'],
       items: [
         {
           id: 'REC-01',
-          title: 'Ôn tập thêm môn Xây dựng phần mềm thiết bị di động',
+          title: 'Ã”n táº­p thÃªm mÃ´n XÃ¢y dá»±ng pháº§n má»m thiáº¿t bá»‹ di Ä‘á»™ng',
           category: 'subject',
           priority: 'high',
-          description: 'Điểm phản hồi của môn này đang thấp hơn các môn còn lại và cần được củng cố thêm.',
-          actionLabel: 'Xem kế hoạch ôn tập',
+          description: 'Äiá»ƒm pháº£n há»“i cá»§a mÃ´n nÃ y Ä‘ang tháº¥p hÆ¡n cÃ¡c mÃ´n cÃ²n láº¡i vÃ  cáº§n Ä‘Æ°á»£c cá»§ng cá»‘ thÃªm.',
+          actionLabel: 'Xem káº¿ hoáº¡ch Ã´n táº­p',
           status: 'pending'
         },
         {
           id: 'REC-02',
-          title: 'Ưu tiên chọn học với Giảng viên A',
+          title: 'Æ¯u tiÃªn chá»n há»c vá»›i Giáº£ng viÃªn A',
           category: 'instructor',
           priority: 'medium',
-          description: 'Kết quả phản hồi cho thấy phong cách giảng dạy phù hợp với xu hướng học tập của bạn.',
-          actionLabel: 'Xem chi tiết',
+          description: 'Káº¿t quáº£ pháº£n há»“i cho tháº¥y phong cÃ¡ch giáº£ng dáº¡y phÃ¹ há»£p vá»›i xu hÆ°á»›ng há»c táº­p cá»§a báº¡n.',
+          actionLabel: 'Xem chi tiáº¿t',
           status: 'in_progress'
         },
         {
           id: 'REC-03',
-          title: 'Tăng thời gian tự học mỗi tuần',
+          title: 'TÄƒng thá»i gian tá»± há»c má»—i tuáº§n',
           category: 'study_method',
           priority: 'medium',
-          description: 'Nên duy trì ít nhất 8 đến 10 giờ tự học mỗi tuần để cải thiện độ ổn định.',
-          actionLabel: 'Đánh dấu đã xem',
+          description: 'NÃªn duy trÃ¬ Ã­t nháº¥t 8 Ä‘áº¿n 10 giá» tá»± há»c má»—i tuáº§n Ä‘á»ƒ cáº£i thiá»‡n Ä‘á»™ á»•n Ä‘á»‹nh.',
+          actionLabel: 'ÄÃ¡nh dáº¥u Ä‘Ã£ xem',
           status: 'done'
         },
         {
           id: 'REC-04',
-          title: 'Phát triển kỹ năng làm việc nhóm',
+          title: 'PhÃ¡t triá»ƒn ká»¹ nÄƒng lÃ m viá»‡c nhÃ³m',
           category: 'skill',
           priority: 'low',
-          description: 'Tham gia thêm các dự án nhóm để rèn luyện kỹ năng giao tiếp và hợp tác.',
-          actionLabel: 'Tìm dự án',
+          description: 'Tham gia thÃªm cÃ¡c dá»± Ã¡n nhÃ³m Ä‘á»ƒ rÃ¨n luyá»‡n ká»¹ nÄƒng giao tiáº¿p vÃ  há»£p tÃ¡c.',
+          actionLabel: 'TÃ¬m dá»± Ã¡n',
           status: 'pending'
         }
       ]

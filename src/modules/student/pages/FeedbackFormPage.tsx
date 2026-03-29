@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from 'react'
+﻿import { useEffect, useMemo } from 'react'
 import {
   Alert,
+  Card,
   Button,
   Col,
   Form,
   Input,
+  Grid,
   Row,
   Space,
   Table,
@@ -70,6 +72,8 @@ const cardStyle = {
 } as const
 
 export default function FeedbackFormPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const [form] = Form.useForm<FeedbackFormValues>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -297,6 +301,63 @@ export default function FeedbackFormPage() {
         <div style={cardStyle}>
           {courses.length === 0 ? (
             <EmptyState description="Không có môn học nào phù hợp với bộ lọc hiện tại" />
+          ) : isMobile ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {courses.map((record) => {
+                const isSubmitted = record.feedbackStatus === 'da-phan-hoi'
+
+                return (
+                  <Card
+                    key={record.id}
+                    size="small"
+                    style={{
+                      borderRadius: 18,
+                      border: '1px solid #D7E1F0',
+                      background: isSubmitted ? '#F6FFED' : '#FFFFFF',
+                      opacity: isSubmitted ? 0.78 : 1,
+                      boxShadow: '0 8px 18px rgba(0, 45, 109, 0.06)'
+                    }}
+                    bodyStyle={{ padding: 16 }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        <Typography.Text strong style={{ color: '#163253', fontSize: 18, lineHeight: 1.45 }}>
+                          {record.subject}
+                        </Typography.Text>
+                        <Typography.Text style={{ color: '#42546B', fontSize: 15, lineHeight: 1.5 }}>
+                          {record.instructor}
+                        </Typography.Text>
+                      </div>
+
+                      {isSubmitted ? (
+                        <Button
+                          type="primary"
+                          icon={<CheckCircleFilled />}
+                          disabled
+                          style={{
+                            alignSelf: 'flex-start',
+                            background: '#52C41A',
+                            borderColor: '#52C41A',
+                            color: '#fff',
+                            boxShadow: 'none'
+                          }}
+                        >
+                          Đã phản hồi
+                        </Button>
+                      ) : (
+                        <Button
+                          icon={<FormOutlined />}
+                          onClick={() => navigate(`/student/feedback/new?courseId=${record.id}`)}
+                          style={{ alignSelf: 'flex-start', borderRadius: 999 }}
+                        >
+                          Mở form phản hồi
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                )
+              })}
+            </div>
           ) : (
             <Table<Course>
               rowKey="id"
@@ -320,7 +381,6 @@ export default function FeedbackFormPage() {
       </div>
     )
   }
-
   if (!selectedCourse || !fixedFieldValues) {
     return (
       <EmptyState
@@ -334,6 +394,7 @@ export default function FeedbackFormPage() {
   const semesterDisplayValue = metadata.semesters.find((option) => option.value === selectedCourse.semester)?.label
     ?.replace(/\s+-\s+/g, '-')
     ?? selectedCourse.semester
+  const stickyHeaderTop = isMobile ? 120 : 88
   const readonlyInputStyle = {
     background: '#FFFFFF',
     color: '#183A70',
@@ -341,9 +402,9 @@ export default function FeedbackFormPage() {
   } as const
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* header cố định khi cuộn */}
-      <div style={{ position: 'sticky', top: 88, zIndex: 30 }}>
+      <div style={{ position: 'sticky', top: stickyHeaderTop, zIndex: 30 }}>
         <div style={cardStyle}>
           <PageHeader
             title="Biểu mẫu phản hồi"
@@ -357,21 +418,6 @@ export default function FeedbackFormPage() {
                 style={{ borderRadius: 999, width: 44, height: 44, minWidth: 44 }}
               />
             )}
-            extra={
-              !viewMode ? (
-                <Space wrap>
-                  <Button icon={<SaveOutlined />} size="large" onClick={handleSaveDraft}>
-                    Lưu nháp
-                  </Button>
-                  <SubmitButton loading={mutation.isPending} onClick={handleSubmit}>
-                    <Space size={8}><SendOutlined /><span>Gửi phản hồi</span></Space>
-                  </SubmitButton>
-                  <Button icon={<ReloadOutlined />} size="large" onClick={handleReset}>
-                    Làm lại
-                  </Button>
-                </Space>
-              ) : null
-            }
           />
         </div>
       </div>
@@ -433,7 +479,7 @@ export default function FeedbackFormPage() {
             <Row gutter={[16, 16]}>
               <Col xs={24}><TextAreaField name="lecturerSupport" label="Điều giảng viên có thể làm để bạn học tốt hơn" required disabled={viewMode} /></Col>
               <Col xs={24}><TextAreaField name="mainDifficulty" label="Khó khăn chính khiến bạn dễ rớt môn" required disabled={viewMode} /></Col>
-              <Col xs={24}><DropdownField name="attendanceRate" label="Tỉ lệ tham gia lớp" options={metadata.attendanceRateOptions} required disabled={viewMode} /></Col>
+              <Col xs={24}><DropdownField name="attendanceRate" label="Tỷ lệ tham gia lớp" options={metadata.attendanceRateOptions} required disabled={viewMode} /></Col>
               <Col xs={24} md={12}><RadioGroupField name="homeworkBeforeClass" label="Thường làm bài tập trước khi đến lớp?" options={metadata.homeworkOptions} required disabled={viewMode} /></Col>
               <Col xs={24} md={12}><RadioGroupField name="requirementLevel" label="Môn yêu cầu nhiều toán / logic / coding?" options={metadata.requirementLevelOptions} required disabled={viewMode} /></Col>
               <Col xs={24}>
@@ -473,6 +519,30 @@ export default function FeedbackFormPage() {
                 </Form.Item>
               </Col>
             </Row>
+
+            {!viewMode && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'flex-start',
+                  marginTop: 24,
+                  paddingTop: 20,
+                  borderTop: '1px solid #E5ECF6'
+                }}
+              >
+                <Space wrap>
+                  <Button icon={<SaveOutlined />} size="large" onClick={handleSaveDraft}>
+                    Lưu nháp
+                  </Button>
+                  <SubmitButton loading={mutation.isPending} onClick={handleSubmit}>
+                    <Space size={8}><SendOutlined /><span>Gửi phản hồi</span></Space>
+                  </SubmitButton>
+                  <Button icon={<ReloadOutlined />} size="large" onClick={handleReset}>
+                    Làm lại
+                  </Button>
+                </Space>
+              </div>
+            )}
           </SurveySectionCard>
         </Form>
       </div>
