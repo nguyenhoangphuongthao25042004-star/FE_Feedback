@@ -30,9 +30,38 @@ export default function LineChartCard({ data }: { data: LinePoint[] }) {
         <LineChart data={data} margin={{ top: 8, right: 8, left: -16, bottom: 20 }}>
           <CartesianGrid stroke="#E8EEF8" vertical={false} />
           <XAxis dataKey="name" tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} domain={[0, 8]} ticks={[0, 2, 4, 6, 8]} />
           <Tooltip />
-          <Line type="monotone" dataKey="value" stroke="#004286" strokeWidth={3} dot={{ r: 4 }} />
+          {/* custom hollow marker: outer ring with white fill */}
+          {/**
+           * Recharts will call this function for each dot. We return an SVG group
+           * containing an outer stroked circle with white fill to create the hollow
+           * appearance shown in the screenshot.
+           */}
+          <Line
+            type="monotone"
+            dataKey="value"
+            stroke="#004286"
+            strokeWidth={3}
+            dot={(props: { cx?: number; cy?: number }) => {
+              const { cx, cy } = props
+              if (cx == null || cy == null) return null
+              return (
+                <g>
+                  <circle cx={cx} cy={cy} r={8} stroke="#004286" strokeWidth={3} fill="#ffffff" />
+                </g>
+              )
+            }}
+            activeDot={(props: { cx?: number; cy?: number }) => {
+              const { cx, cy } = props
+              if (cx == null || cy == null) return null
+              return (
+                <g>
+                  <circle cx={cx} cy={cy} r={9} stroke="#01263b" strokeWidth={2} fill="#ffffff" />
+                </g>
+              )
+            }}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>

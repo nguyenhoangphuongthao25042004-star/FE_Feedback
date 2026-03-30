@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 import { useFeedbackHistoryQuery } from '../api/student.api'
 import { useUiStore } from '../../../stores/ui.store'
 import type { FeedbackHistory } from '../types/student.types'
-import { EyeOutlined } from '@ant-design/icons'
+import { EyeOutlined, FilterFilled, FilterOutlined } from '@ant-design/icons'
 
 const cardStyle = {
   borderRadius: 20,
@@ -117,6 +117,11 @@ export default function FeedbackHistoryPage() {
       ],
       filterMultiple: false,
       filteredValue: courseScoreSortOrder ? [courseScoreSortOrder] : [],
+      filterIcon: (filtered: boolean) => (
+        filtered
+          ? <FilterFilled style={{ color: '#000' }} />
+          : <FilterOutlined style={{ color: '#000' }} />
+      ),
       render: (value: number) => `${value.toFixed(1)}/5`
     },
     {
@@ -130,6 +135,11 @@ export default function FeedbackHistoryPage() {
       ],
       filterMultiple: false,
       filteredValue: instructorScoreSortOrder ? [instructorScoreSortOrder] : [],
+      filterIcon: (filtered: boolean) => (
+        filtered
+          ? <FilterFilled style={{ color: '#000' }} />
+          : <FilterOutlined style={{ color: '#000' }} />
+      ),
       render: (value: number) => `${value.toFixed(1)}/5`
     },
     {
@@ -143,6 +153,11 @@ export default function FeedbackHistoryPage() {
       ],
       filterMultiple: false,
       filteredValue: feedbackStatusFilter ? [feedbackStatusFilter] : [],
+      filterIcon: (filtered: boolean) => (
+        filtered
+          ? <FilterFilled style={{ color: '#000' }} />
+          : <FilterOutlined style={{ color: '#000' }} />
+      ),
       render: (value: FeedbackHistory['status']) => (
         <Tag
           style={

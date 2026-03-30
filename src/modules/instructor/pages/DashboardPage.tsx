@@ -88,13 +88,13 @@ export default function DashboardPage() {
         <div
           style={{
             display: 'flex',
-            flexDirection: 'column',
-            alignItems: isMobile ? 'center' : 'stretch',
-            textAlign: isMobile ? 'center' : 'left',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'center' : 'flex-start',
+            justifyContent: 'space-between',
             gap: 16
           }}
         >
-          <div style={{ width: '100%' }}>
+          <div style={{ width: '100%', textAlign: isMobile ? 'center' : 'left' }}>
             <Typography.Title
               level={1}
               style={{
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             </Typography.Text>
           </div>
 
-          <Space wrap style={{ justifyContent: isMobile ? 'center' : 'flex-start' }}>
+          <Space wrap style={{ justifyContent: isMobile ? 'center' : 'flex-end', flexShrink: 0 }}>
             <Button icon={<DownloadOutlined />} size="large" style={{ minHeight: 44 }} onClick={handleExportCsv}>
               Export CSV
             </Button>

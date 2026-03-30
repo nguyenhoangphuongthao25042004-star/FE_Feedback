@@ -1,5 +1,5 @@
 ﻿import { useMemo, useState } from 'react'
-import { EyeOutlined } from '@ant-design/icons'
+import { EyeOutlined, FilterFilled, FilterOutlined } from '@ant-design/icons'
 import { Alert, Button, Card, Grid, Space, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
@@ -125,6 +125,11 @@ export default function CoursesPage() {
         ],
         filterMultiple: false,
         filteredValue: courseResultFilter ? [courseResultFilter] : [],
+        filterIcon: () => (
+          courseResultFilter
+            ? <FilterFilled style={{ color: '#000' }} />
+            : <FilterOutlined style={{ color: '#000' }} />
+        ),
         render: (value: Course['courseResult']) => (
           <Typography.Text style={{ color: '#163253', fontSize: 15 }}>
             {value === 'pass' ? 'Đạt' : 'Không đạt'}
@@ -143,6 +148,11 @@ export default function CoursesPage() {
         ],
         filterMultiple: false,
         filteredValue: difficultyFilter ? [difficultyFilter] : [],
+        filterIcon: () => (
+          difficultyFilter
+            ? <FilterFilled style={{ color: '#000' }} />
+            : <FilterOutlined style={{ color: '#000' }} />
+        ),
         render: (value: CourseDifficulty) => (
           <Tag
             style={{
@@ -169,6 +179,11 @@ export default function CoursesPage() {
         ],
         filterMultiple: false,
         filteredValue: courseScoreSortOrder ? [courseScoreSortOrder] : [],
+        filterIcon: () => (
+          courseScoreSortOrder
+            ? <FilterFilled style={{ color: '#000' }} />
+            : <FilterOutlined style={{ color: '#000' }} />
+        ),
         render: (value: number) => value.toFixed(1)
       },
       {
@@ -183,6 +198,11 @@ export default function CoursesPage() {
         ],
         filterMultiple: false,
         filteredValue: instructorScoreSortOrder ? [instructorScoreSortOrder] : [],
+        filterIcon: () => (
+          instructorScoreSortOrder
+            ? <FilterFilled style={{ color: '#000' }} />
+            : <FilterOutlined style={{ color: '#000' }} />
+        ),
         render: (value: number) => `${value.toFixed(1)}/5`
       },
       {
@@ -197,6 +217,11 @@ export default function CoursesPage() {
         ],
         filterMultiple: false,
         filteredValue: feedbackStatusFilter ? [feedbackStatusFilter] : [],
+        filterIcon: () => (
+          feedbackStatusFilter
+            ? <FilterFilled style={{ color: '#000' }} />
+            : <FilterOutlined style={{ color: '#000' }} />
+        ),
         render: (value: Course['feedbackStatus']) => (
           <Tag
             style={{

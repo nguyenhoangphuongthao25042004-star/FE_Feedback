@@ -15,6 +15,7 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
   const location = useLocation() // lấy route hiện tại để đánh dấu mục đang chọn
 
   const isInstructor = location.pathname.startsWith('/instructor')
+  const isAdmin = location.pathname.startsWith('/admin')
   const selectedKey = location.pathname
 
   return (
@@ -69,7 +70,15 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
           flex: 1,
           paddingTop: 8
         }}
-        items={isInstructor ? [
+        items={isAdmin ? [
+          { key: '/admin/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },
+          { key: '/admin/course-ranking', icon: <BarChartOutlined />, label: 'Xếp hạng môn học' },
+          { key: '/admin/instructor-ranking', icon: <UserOutlined />, label: 'Xếp hạng giảng viên' },
+          { key: '/admin/department-analytics', icon: <LineChartOutlined />, label: 'Phân tích khoa' },
+          { key: '/admin/survey-data', icon: <CommentOutlined />, label: 'Dữ liệu khảo sát' },
+          { key: '/admin/data-quality', icon: <HistoryOutlined />, label: 'Chất lượng dữ liệu' },
+          { key: '/admin/reports', icon: <BulbOutlined />, label: 'Báo cáo' }
+        ] : isInstructor ? [
           { key: '/instructor/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },
           { key: '/instructor/courses', icon: <BookOutlined />, label: 'Danh sách môn giảng dạy' },
           { key: '/instructor/quality', icon: <BarChartOutlined />, label: 'Chỉ số chất lượng' },

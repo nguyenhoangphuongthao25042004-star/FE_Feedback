@@ -4,6 +4,8 @@ import type { DashboardScoreItem } from '../../modules/student/types/student.typ
 
 type BarChartCardProps = {
   data: DashboardScoreItem[]
+  title?: string
+  subtitle?: string
 }
 
 type AxisTickProps = {
@@ -90,7 +92,7 @@ function AxisTick({ x = 0, y = 0, payload }: AxisTickProps) {
   )
 }
 
-export default function BarChartCard({ data }: BarChartCardProps) {
+export default function BarChartCard({ data, title, subtitle }: BarChartCardProps) {
   return (
     <div
       role="region"
@@ -107,9 +109,9 @@ export default function BarChartCard({ data }: BarChartCardProps) {
       }}
     >
       <div style={{ marginBottom: 12 }}>
-        <h3 style={{ margin: 0, color: '#163253', fontSize: 18 }}>Điểm đánh giá các môn học</h3>
+        <h3 style={{ margin: 0, color: '#163253', fontSize: 18 }}>{title ?? 'Điểm đánh giá các môn học'}</h3>
         <div style={{ color: '#42546B', fontSize: 13, marginTop: 4 }}>
-          Cột xanh thể hiện điểm trung bình của từng môn học
+          {subtitle ?? 'Cột xanh thể hiện điểm trung bình của từng môn học'}
         </div>
       </div>
 

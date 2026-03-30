@@ -1,6 +1,6 @@
 ﻿import { useMemo, useState } from 'react'
-import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, MinusOutlined } from '@ant-design/icons'
-import { Alert, Button, Card, Grid, Select, Table, Tag, Typography } from 'antd'
+import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Grid, Select, Table, Tag, Typography, Row, Col } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { useNavigate } from 'react-router-dom'
 
@@ -8,6 +8,7 @@ import { useStudentCoursesQuery } from '../../student/api/courseApi'
 import { getFeedbackWorkflowState } from '../../student/api/feedbackData'
 import type { Course } from '../../student/types/course'
 import { useUiStore } from '../../../stores/ui.store'
+import PageHeader from '../../../components/layout/PageHeader'
 
 const cardStyle = {
   borderRadius: 20,
@@ -44,10 +45,11 @@ export default function CoursesPage() {
   const selectedSemester = useUiStore((state) => state.selectedSemester)
   const searchKeyword = useUiStore((state) => state.searchKeyword)
   const semesterFilter = selectedSemester ?? 'all'
-  const [statusFilterSelect, setStatusFilterSelect] = useState<string | null>(null)
+  
   const [courseResultFilter, setCourseResultFilter] = useState<string | null>(null)
   const [difficultyFilter, setDifficultyFilter] = useState<string | null>(null)
   const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<string | null>(null)
+  const [trendFilter, setTrendFilter] = useState<string | null>(null)
   const [courseScoreSortOrder, setCourseScoreSortOrder] = useState<string | null>(null)
   const [instructorScoreSortOrder, setInstructorScoreSortOrder] = useState<string | null>(null)
 
@@ -56,7 +58,7 @@ export default function CoursesPage() {
     keyword: ''
   })
 
-  const submissions = getFeedbackWorkflowState().submissions ?? {}
+  const submissions = useMemo(() => getFeedbackWorkflowState().submissions ?? {}, [])
 
   const courses = useMemo(() => {
     let result = [...baseData]
@@ -74,9 +76,13 @@ export default function CoursesPage() {
       result = result.filter((course) => course.difficultyLevel === difficultyFilter)
     }
 
-    const effectiveStatus = statusFilterSelect ?? feedbackStatusFilter
+  const effectiveStatus = feedbackStatusFilter
     if (effectiveStatus) {
       result = result.filter((course) => course.feedbackStatus === effectiveStatus)
+    }
+
+    if (trendFilter) {
+      result = result.filter((course) => getTrendConfig(course.courseScore).label === trendFilter)
     }
 
     if (courseScoreSortOrder === 'asc') {
@@ -98,7 +104,7 @@ export default function CoursesPage() {
     courseResultFilter,
     difficultyFilter,
     feedbackStatusFilter,
-    statusFilterSelect,
+    trendFilter,
     courseScoreSortOrder,
     instructorScoreSortOrder
   ])
@@ -145,6 +151,17 @@ export default function CoursesPage() {
       key: 'courseScore',
       align: 'center',
       width: 120,
+      filters: [
+        { text: 'Tăng dần', value: 'asc' },
+        { text: 'Giảm dần', value: 'desc' }
+      ],
+      filterMultiple: false,
+      filteredValue: courseScoreSortOrder ? [courseScoreSortOrder] : [],
+      filterIcon: () => (
+        courseScoreSortOrder
+          ? <FilterFilled style={{ color: '#000' }} />
+          : <FilterOutlined style={{ color: '#000' }} />
+      ),
       render: (value: number) => {
         const normalized = value > 5 ? value / 2 : value
         return <Typography.Text>{normalized.toFixed(1)}/5</Typography.Text>
@@ -156,6 +173,17 @@ export default function CoursesPage() {
       key: 'instructorScore',
       align: 'center',
       width: 140,
+      filters: [
+        { text: 'Tăng dần', value: 'asc' },
+        { text: 'Giảm dần', value: 'desc' }
+      ],
+      filterMultiple: false,
+      filteredValue: instructorScoreSortOrder ? [instructorScoreSortOrder] : [],
+      filterIcon: () => (
+        instructorScoreSortOrder
+          ? <FilterFilled style={{ color: '#000' }} />
+          : <FilterOutlined style={{ color: '#000' }} />
+      ),
       render: (value: number) => <Typography.Text>{value.toFixed(1)}/5</Typography.Text>
     },
     {
@@ -163,6 +191,18 @@ export default function CoursesPage() {
       key: 'trend',
       align: 'center',
       width: 140,
+      filters: [
+        { text: 'Tăng', value: 'Tăng' },
+        { text: 'Ổn định', value: 'Ổn định' },
+        { text: 'Giảm', value: 'Giảm' }
+      ],
+      filterMultiple: false,
+      filteredValue: trendFilter ? [trendFilter] : [],
+      filterIcon: () => (
+        trendFilter
+          ? <FilterFilled style={{ color: '#000' }} />
+          : <FilterOutlined style={{ color: '#000' }} />
+      ),
       render: (_, record) => {
         const trend = getTrendConfig(record.courseScore)
 
@@ -184,64 +224,34 @@ export default function CoursesPage() {
         </Button>
       )
     }
-  ], [navigate, submissions])
+  ], [navigate, submissions, courseScoreSortOrder, instructorScoreSortOrder, trendFilter])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <Card style={cardStyle}>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            gap: 20,
-            flexWrap: 'wrap'
-          }}
-        >
-          <div style={{ flex: '1 1 520px', minWidth: isMobile ? '100%' : 300 }}>
-            <Typography.Title
-              level={1}
-              style={{
-                margin: 0,
-                color: '#163253',
-                fontSize: isMobile ? 28 : isTablet ? 30 : 32,
-                fontWeight: 800,
-                letterSpacing: 0.4
-              }}
-            >
-              Danh sách môn giảng dạy
-            </Typography.Title>
-
-            <Typography.Text
-              style={{
-                marginTop: 8,
-                display: 'inline-block',
-                color: '#42546B',
-                fontSize: 16,
-                lineHeight: 1.6
-              }}
-            >
-              Theo dõi nhanh kết quả học tập và phản hồi của sinh viên theo từng môn học bạn phụ trách
-            </Typography.Text>
-          </div>
-
-          <div style={{ flex: isMobile ? '1 1 100%' : '0 1 450px', alignSelf: 'center', width: isMobile ? '100%' : undefined }}>
-            <Select
-              placeholder="Trạng thái"
-              allowClear
-              size="large"
-              style={{ width: '100%', fontSize: 16 }}
-              value={statusFilterSelect ?? undefined}
-              onChange={(value) => setStatusFilterSelect(value ?? null)}
-              options={[
-                { label: 'Đang học', value: 'dang-hoc' },
-                { label: 'Chưa phản hồi', value: 'chua-phan-hoi' },
-                { label: 'Đã phản hồi', value: 'da-phan-hoi' }
-              ]}
-            />
-          </div>
-        </div>
-      </Card>
+      <div style={{ background: '#FFFFFF', border: '1px solid #E8EEF8', borderRadius: 16, padding: 28, boxShadow: '0 8px 20px rgba(28,61,102,0.04)' }}>
+        <Row align="top" justify="space-between">
+          <Col flex="auto">
+            <PageHeader title="Danh sách môn giảng dạy" description="Theo dõi nhanh kết quả học tập và phản hồi của sinh viên theo từng môn học bạn phụ trách" contentGap={8} />
+          </Col>
+          <Col style={{ display: 'flex', justifyContent: 'flex-end', minWidth: 240 }}>
+            <div style={{ width: 450 }}>
+              <div style={{ fontSize: 16, color: '#42546B', marginBottom: 6 }}></div>
+              <Select
+                allowClear
+                placeholder="Trạng thái"
+                size="large"
+                style={{ width: '100%', fontSize: 16 }}
+                value={feedbackStatusFilter ?? undefined}
+                onChange={(v) => setFeedbackStatusFilter(v ?? null)}
+              >
+                <Select.Option value="dang-hoc">Đang học</Select.Option>
+                <Select.Option value="chua-phan-hoi">Chưa phản hồi</Select.Option>
+                <Select.Option value="da-phan-hoi">Đã phản hồi</Select.Option>
+              </Select>
+            </div>
+          </Col>
+        </Row>
+      </div>
 
       {isError && (
         <Alert
@@ -348,12 +358,14 @@ export default function CoursesPage() {
               const courseResultFilters = filters.courseResult as string[] | null
               const difficultyFilters = filters.difficultyLevel as string[] | null
               const feedbackStatusFilters = filters.feedbackStatus as string[] | null
+              const trendFilters = filters.trend as string[] | null
               const courseScoreFilters = filters.courseScore as string[] | null
               const instructorScoreFilters = filters.instructorScore as string[] | null
 
               setCourseResultFilter(courseResultFilters?.[0] ?? null)
               setDifficultyFilter(difficultyFilters?.[0] ?? null)
               setFeedbackStatusFilter(feedbackStatusFilters?.[0] ?? null)
+              setTrendFilter(trendFilters?.[0] ?? null)
               setCourseScoreSortOrder(courseScoreFilters?.[0] ?? null)
               setInstructorScoreSortOrder(instructorScoreFilters?.[0] ?? null)
             }}

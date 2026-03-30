@@ -198,8 +198,13 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
     normalizeNotifications(readStoredNotifications(notificationStorageKey, notificationSeeds))
   ))
   const avatarLabel = user?.name?.trim().charAt(0).toUpperCase() || 'U'
-  // Show the topbar search for student course listings/history and the instructor courses list
-  const shouldShowSearch = location.pathname === '/student/courses' || location.pathname === '/student/history' || location.pathname === '/instructor/courses'
+  // Show the topbar search for course-focused pages across roles
+  const shouldShowSearch = (
+    location.pathname === '/student/courses'
+    || location.pathname === '/student/history'
+    || location.pathname === '/instructor/courses'
+    || location.pathname === '/admin/course-ranking'
+  )
 
   useEffect(() => {
     setNotifications(normalizeNotifications(readStoredNotifications(notificationStorageKey, notificationSeeds)))
@@ -500,7 +505,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
         {shouldShowSearch && (
           <Input
             aria-label="Tìm kiếm"
-            placeholder={location.pathname === '/instructor/courses' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
+            placeholder={location.pathname === '/instructor/courses' || location.pathname === '/admin/course-ranking' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
             value={searchKeyword}
             onChange={(event) => setSearchKeyword(event.target.value)}
             style={{
@@ -613,7 +618,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           {shouldShowSearch && (
             <Input
               aria-label="Tìm kiếm"
-              placeholder={location.pathname === '/instructor/courses' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
+              placeholder={location.pathname === '/instructor/courses' || location.pathname === '/admin/course-ranking' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
               value={searchKeyword}
               onChange={(event) => setSearchKeyword(event.target.value)}
               style={{
@@ -704,7 +709,7 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
         {shouldShowSearch && (
           <Input
             aria-label="Tìm kiếm"
-            placeholder={location.pathname === '/instructor/courses' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
+            placeholder={location.pathname === '/instructor/courses' || location.pathname === '/admin/course-ranking' ? 'Tìm môn học' : 'Tìm môn học hoặc giảng viên'}
             value={searchKeyword}
             onChange={(event) => setSearchKeyword(event.target.value)}
             style={{
@@ -723,3 +728,5 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
     </div>
   )
 }
+
+
