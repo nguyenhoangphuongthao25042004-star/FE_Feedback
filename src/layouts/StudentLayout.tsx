@@ -20,7 +20,11 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
   const location = useLocation()
   const isMobile = !screens.md // mobile khi nhỏ hơn md
   const isTablet = Boolean(screens.md && !screens.lg) // tablet khi từ md đến trước lg
-  const shouldShowTopbarSearch = location.pathname === '/student/courses' || location.pathname === '/student/history' || location.pathname === '/instructor/courses'
+  const shouldShowTopbarSearch =
+    location.pathname === '/student/courses'
+    || location.pathname === '/student/history'
+    || location.pathname === '/instructor/courses'
+    || location.pathname === '/admin/course-ranking'
   const headerHeight = isMobile ? (shouldShowTopbarSearch ? 188 : 112) : 72 // header mobile cao hơn để đủ chỗ 2 hàng
   const [collapsed, setCollapsed] = useState(false) // trạng thái thu gọn sidebar
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false) // trạng thái mở drawer trên mobile
@@ -98,7 +102,6 @@ export default function StudentLayout({ children }: StudentLayoutProps) {
             isMobile={isMobile}
             isTablet={isTablet}
             sidebarWidth={sidebarWidth}
-            collapsed={collapsed}
             onMenuClick={() => setMobileMenuOpen(true)}
           />
         </Header>

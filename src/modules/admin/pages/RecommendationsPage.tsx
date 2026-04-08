@@ -1,4 +1,4 @@
-import { Card, List, Space, Tag, Typography } from 'antd'
+import { Card, Grid, List, Space, Tag, Typography } from 'antd'
 import { BulbOutlined } from '@ant-design/icons'
 
 const { Title, Paragraph } = Typography
@@ -31,6 +31,8 @@ function impactColor(impact: 'low' | 'medium' | 'high') {
 
 // Trang tạm cho dashboard đề xuất cải thiện của quản trị
 export default function RecommendationsPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   return (
     <Card
       style={{
@@ -38,7 +40,7 @@ export default function RecommendationsPage() {
         border: '1px solid #D7E1F0',
         boxShadow: '0 8px 20px rgba(28,61,102,0.06)'
       }}
-      bodyStyle={{ padding: 24 }}
+      bodyStyle={{ padding: isMobile ? 16 : 24 }}
     >
       <Space direction="vertical" size={12} style={{ width: '100%' }}>
         <Space align="center" size={10}>
@@ -58,8 +60,12 @@ export default function RecommendationsPage() {
           dataSource={mockRecommendations}
           renderItem={(item) => (
             <List.Item style={{ borderColor: '#EEF3FB' }}>
-              <Space style={{ width: '100%', justifyContent: 'space-between' }}>
-                <span style={{ color: '#163253', fontWeight: 600 }}>{item.title}</span>
+              <Space
+                direction={isMobile ? 'vertical' : 'horizontal'}
+                size={isMobile ? 8 : 'small'}
+                style={{ width: '100%', justifyContent: 'space-between', alignItems: isMobile ? 'flex-start' : 'center' }}
+              >
+                <span style={{ color: '#163253', fontWeight: 600, lineHeight: 1.6 }}>{item.title}</span>
                 <Tag color={impactColor(item.impact)}>{item.impact.toUpperCase()}</Tag>
               </Space>
             </List.Item>

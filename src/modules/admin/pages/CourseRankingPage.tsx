@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowDownOutlined, ArrowUpOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
-import { Button, Card, Col, Modal, List, Progress, Radio, Row, Space, Spin, Statistic, Table, Tag, Typography } from 'antd'
+import { Button, Card, Col, Grid, Modal, List, Progress, Radio, Row, Space, Spin, Statistic, Table, Tag, Typography } from 'antd'
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell } from 'recharts'
 import type { ColumnsType } from 'antd/es/table'
 import type { KhuyenNghi } from '../types/drilldown.types'
@@ -187,6 +187,10 @@ function hienThiXuHuong(xuHuong: number) {
 }
 
 export default function CourseRankingPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
+  const isTablet = Boolean(screens.md && !screens.xxl)
+  const shouldUseCardLayout = isMobile || isTablet
   const [sortConfig, setSortConfig] = useState<{
     key: 'soPhanHoi' | 'qiTrungBinh' | 'qiTrongSo' | 'diemTB' | 'xuHuong' | 'doTinCay' | null
     order: 'asc' | 'desc' | null
@@ -456,12 +460,124 @@ export default function CourseRankingPage() {
       </div>
 
       <Card style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
-        <Table
-          rowKey="id"
-          columns={columns}
-          dataSource={duLieuSapXep}
-          pagination={{ pageSize: 8, showSizeChanger: false, position: ['bottomRight'] }}
-        />
+        {shouldUseCardLayout ? (
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isTablet ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+              gap: 16
+            }}
+          >
+            {duLieuSapXep.map((item) => {
+              const difficultyStyle = mauDoKho(item.doKho)
+              const statusStyle = mauTrangThai(item.trangThai)
+
+              return (
+                <Card
+                  key={item.id}
+                  size="small"
+                  style={{
+                    borderRadius: 18,
+                    border: '1px solid #D7E1F0',
+                    boxShadow: '0 8px 18px rgba(0, 45, 109, 0.06)'
+                  }}
+                  bodyStyle={{ padding: 16 }}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'flex-start' }}>
+                      <div style={{ minWidth: 0 }}>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>
+                          Hạng #{item.rank}
+                        </Typography.Text>
+                        <Typography.Text strong style={{ color: '#163253', fontSize: 20, lineHeight: 1.4 }}>
+                          {item.tenMonHoc}
+                        </Typography.Text>
+                      </div>
+
+                      <Button
+                        type="link"
+                        style={{ padding: 0, fontWeight: 600, flexShrink: 0 }}
+                        onClick={() => {
+                          setSelectedCourseId(item.id)
+                          setVisibleDrawer(true)
+                        }}
+                      >
+                        Xem chi tiết
+                      </Button>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                      <Tag
+                        style={{
+                          margin: 0,
+                          borderRadius: 999,
+                          borderColor: difficultyStyle.border,
+                          background: difficultyStyle.bg,
+                          color: difficultyStyle.text,
+                          paddingInline: 10
+                        }}
+                      >
+                        {item.doKho}
+                      </Tag>
+                      <Tag
+                        style={{
+                          margin: 0,
+                          borderRadius: 999,
+                          borderColor: statusStyle.border,
+                          background: statusStyle.bg,
+                          color: statusStyle.text,
+                          paddingInline: 10
+                        }}
+                      >
+                        {item.trangThai}
+                      </Tag>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 12 }}>
+                      <div>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>Số phản hồi</Typography.Text>
+                        <Typography.Text style={{ color: '#163253', fontSize: 15 }}>{item.soPhanHoi}</Typography.Text>
+                      </div>
+                      <div>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>QI trung bình</Typography.Text>
+                        <Typography.Text style={{ color: '#163253', fontSize: 15 }}>{item.qiTrungBinh.toFixed(1)}</Typography.Text>
+                      </div>
+                      <div>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>QI có trọng số</Typography.Text>
+                        <Typography.Text style={{ color: '#163253', fontSize: 15 }}>{item.qiTrongSo.toFixed(1)}</Typography.Text>
+                      </div>
+                      <div>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>Điểm TB</Typography.Text>
+                        <Typography.Text style={{ color: '#163253', fontSize: 15 }}>{item.diemTB.toFixed(1)}</Typography.Text>
+                      </div>
+                      <div>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>Xu hướng</Typography.Text>
+                        {hienThiXuHuong(item.xuHuong)}
+                      </div>
+                      <div>
+                        <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>Độ tin cậy</Typography.Text>
+                        <Typography.Text style={{ color: '#163253', fontSize: 15 }}>{item.doTinCay}%</Typography.Text>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Typography.Text style={{ display: 'block', color: '#6B7A90', fontSize: 13 }}>Gợi ý</Typography.Text>
+                      <Typography.Text style={{ color: '#42546B', lineHeight: 1.6 }}>{item.goiY}</Typography.Text>
+                    </div>
+                  </div>
+                </Card>
+              )
+            })}
+          </div>
+        ) : (
+          <Table
+            rowKey="id"
+            columns={columns}
+            dataSource={duLieuSapXep}
+            pagination={{ pageSize: 8, showSizeChanger: false, position: ['bottomRight'] }}
+            scroll={{ x: 1180 }}
+          />
+        )}
       </Card>
 
       <CourseDetailDrawer
@@ -482,6 +598,8 @@ function CourseDetailDrawer({
   courseId: string | null
   onClose: () => void
 }) {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const { data, isLoading, isError, refetch } = useQuery({
     queryKey: ['course-detail', courseId],
     queryFn: () => getCourseDetail(courseId || ''),
@@ -597,10 +715,10 @@ function CourseDetailDrawer({
       onCancel={onClose} 
       open={visible} 
       footer={null}
-      width="92vw"
+      width={isMobile ? '96vw' : '92vw'}
       style={{ maxWidth: 1340 }}
       centered
-      bodyStyle={{ maxHeight: '78vh', overflowY: 'auto', overflowX: 'hidden', padding: 22 }}
+      bodyStyle={{ maxHeight: '78vh', overflowY: 'auto', overflowX: 'hidden', padding: isMobile ? 16 : 22 }}
     >
       {isLoading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
@@ -691,7 +809,7 @@ function CourseDetailDrawer({
               </Radio.Group>
             }
           >
-            <div style={{ width: '100%', height: 320 }}>
+            <div style={{ width: '100%', height: isMobile ? 260 : 320 }}>
               <ResponsiveContainer>
                 {factorChartType === 'bar' ? (
                   <BarChart data={data.phanRaChatLuong}>
@@ -779,6 +897,7 @@ function CourseDetailDrawer({
                   size="small"
                   tableLayout="fixed"
                   pagination={false}
+                  scroll={{ x: 640 }}
                   locale={{ emptyText: 'Không có khuyến nghị' }}
                 />
               </Card>

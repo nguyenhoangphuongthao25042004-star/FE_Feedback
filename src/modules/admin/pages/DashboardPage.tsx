@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Button, Col, Modal, Row, Space, Tag } from 'antd'
+import { Button, Col, Grid, Modal, Row, Space, Tag } from 'antd'
 import { DownloadOutlined, FilePdfOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 
@@ -134,6 +134,8 @@ function severityLabel(severity: AlertItem['severity']) {
 }
 
 export default function DashboardPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
   const navigate = useNavigate()
   const latestSemester = semesterKpiSnapshots[semesterKpiSnapshots.length - 1]?.semester ?? ''
 
@@ -438,17 +440,17 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8EEF8', borderRadius: 16, padding: 28, boxShadow: '0 8px 20px rgba(28,61,102,0.04)' }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #E8EEF8', borderRadius: 16, padding: isMobile ? 20 : 28, boxShadow: '0 8px 20px rgba(28,61,102,0.04)' }}>
         <PageHeader
           title="Tổng quan"
           description="Hệ thống hỗ trợ ra quyết định cho quản trị chất lượng giảng dạy theo học kỳ, khoa và giảng viên"
           contentGap={8}
           extra={(
-            <Space wrap>
+            <Space wrap direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : 'auto' }}>
               <Button
                 icon={<DownloadOutlined />}
                 size="large"
-                style={{ minHeight: 44, padding: '8px 16px', fontSize: 15 }}
+                style={{ minHeight: 44, padding: '8px 16px', fontSize: 15, width: isMobile ? '100%' : undefined }}
                 aria-label="Xuất CSV"
                 onClick={handleExportCsv}
               >
@@ -457,7 +459,7 @@ export default function DashboardPage() {
               <Button
                 icon={<FilePdfOutlined />}
                 size="large"
-                style={{ minHeight: 44, padding: '8px 16px', fontSize: 15 }}
+                style={{ minHeight: 44, padding: '8px 16px', fontSize: 15, width: isMobile ? '100%' : undefined }}
                 aria-label="Xuất PDF"
                 onClick={handleExportPdf}
               >

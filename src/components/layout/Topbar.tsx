@@ -4,8 +4,6 @@ import { BellOutlined, ExclamationCircleFilled, LogoutOutlined, MenuOutlined, Us
 import dayjs from 'dayjs'
 import { useLocation, useNavigate } from 'react-router-dom'
 
-import logo from '../../assets/STU-topbar.png'
-import collapsedLogo from '../../assets/stu-logo.png'
 import { useAuthStore } from '../../modules/auth/store/auth.store'
 import { instructorNotificationSeeds } from '../../modules/instructor/api/notificationData'
 import { getStudentFeedbackCourses } from '../../modules/student/api/feedbackData'
@@ -18,7 +16,6 @@ type TopbarProps = {
   isMobile: boolean
   isTablet: boolean
   sidebarWidth?: number
-  collapsed?: boolean
   onMenuClick: () => void
 }
 
@@ -179,7 +176,7 @@ const normalizeInstructorNotifications = (notifications: NotificationItem[]) => 
     })
 }
 
-export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collapsed = false, onMenuClick }: TopbarProps) {
+export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, onMenuClick }: TopbarProps) {
   const location = useLocation()
   const navigate = useNavigate()
   const user = useAuthStore((state) => state.user)
@@ -484,7 +481,6 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
         />
 
         <Space size={8} style={{ gridColumn: '2 / 3', gridRow: '1 / 2', minWidth: 0, overflow: 'hidden' }}>
-          <img src={logo} alt="STU" style={{ width: 64, height: 22, objectFit: 'contain', flexShrink: 0 }} />
           <Text
             strong
             style={{
@@ -568,17 +564,6 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
             minWidth: 0
           }}
         >
-          <img
-            src={collapsed ? collapsedLogo : logo}
-            alt="STU"
-            style={{
-              width: collapsed ? 52 : 108,
-              height: collapsed ? 52 : 30,
-              objectFit: 'contain',
-              objectPosition: collapsed ? 'center center' : 'left center',
-              flexShrink: 0
-            }}
-          />
         </div>
 
         <div
@@ -659,17 +644,6 @@ export default function Topbar({ isMobile, isTablet, sidebarWidth = 220, collaps
           minWidth: 0
         }}
       >
-        <img
-          src={collapsed ? collapsedLogo : logo}
-          alt="STU"
-          style={{
-            width: collapsed ? 52 : 170,
-            height: collapsed ? 52 : 34,
-            objectFit: 'contain',
-            objectPosition: collapsed ? 'center center' : 'left center',
-            flexShrink: 0
-          }}
-        />
       </div>
 
       <div

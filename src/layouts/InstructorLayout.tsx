@@ -95,7 +95,6 @@ export default function InstructorLayout({ children }: InstructorLayoutProps) {
             isMobile={isMobile}
             isTablet={isTablet}
             sidebarWidth={sidebarWidth}
-            collapsed={collapsed}
             onMenuClick={() => setMobileMenuOpen(true)}
           />
         </Header>

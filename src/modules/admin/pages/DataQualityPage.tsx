@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Col, Row, Empty } from 'antd'
+import { Col, Grid, Row, Empty } from 'antd'
 import { Pie, PieChart, ResponsiveContainer, Tooltip as ReTooltip, Line, LineChart, CartesianGrid, XAxis, YAxis, Cell, Legend } from 'recharts'
 
 import PageHeader from '../../../components/layout/PageHeader'
@@ -28,6 +28,9 @@ const cardStyle = {
 } as const
 
 export default function DataQualityPage() {
+  const screens = Grid.useBreakpoint()
+  const isMobile = !screens.md
+  const isTablet = Boolean(screens.md && !screens.xxl)
   const [data, setData] = useState<DataQualityApi | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -84,7 +87,7 @@ export default function DataQualityPage() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8EEF8', borderRadius: 16, padding: 28, boxShadow: '0 8px 20px rgba(28,61,102,0.04)' }}>
+      <div style={{ background: '#FFFFFF', border: '1px solid #E8EEF8', borderRadius: 16, padding: isMobile ? 20 : 28, boxShadow: '0 8px 20px rgba(28,61,102,0.04)' }}>
         <PageHeader title="Chất lượng dữ liệu" description="Theo dõi tình trạng dữ liệu ETL và chất lượng khảo sát" contentGap={8} />
       </div>
 
@@ -100,13 +103,13 @@ export default function DataQualityPage() {
           <div style={{ ...cardStyle, height: '100%', display: 'flex', flexDirection: 'column' }}>
             <h3 style={{ margin: 0, color: '#163253', fontSize: 18 }}>ETL Records Over Time (Total vs Valid)</h3>
             <div style={{ color: '#42546B', fontSize: 13, marginTop: 8 }}>Số lượng bản ghi nạp vào ETL theo ngày — so sánh tổng và bản ghi hợp lệ</div>
-            <div style={{ marginTop: 12, height: 360, flex: 1 }}>
+            <div style={{ marginTop: 12, height: isMobile ? 260 : isTablet ? 300 : 360, flex: 1 }}>
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={data!.etlSeries} margin={{ top: 16, right: 24, left: -8, bottom: 28 }}>
+                <LineChart data={data!.etlSeries} margin={{ top: 16, right: isMobile ? 8 : 24, left: isMobile ? -20 : -8, bottom: 28 }}>
                   <CartesianGrid stroke="#E8EEF8" vertical={false} />
                   <XAxis dataKey="date" tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fill: '#42546B', fontSize: 12 }} axisLine={false} tickLine={false} />
-                  <Legend verticalAlign="top" align="right" height={36} />
+                  <Legend verticalAlign="top" align={isMobile ? 'center' : 'right'} height={isMobile ? 48 : 36} />
                   <ReTooltip />
                   <Line name="Total Records" type="monotone" dataKey="total" stroke="#004286" strokeWidth={2} dot={false} />
                   <Line name="Valid Records" type="monotone" dataKey="valid" stroke="#1DA57A" strokeWidth={2} dot={false} strokeDasharray="6 4" />
@@ -184,15 +187,15 @@ export default function DataQualityPage() {
 
                 return (
                   <>
-                    <div style={{ width: '100%', height: 320, position: 'relative' }}>
+                    <div style={{ width: '100%', height: isMobile ? 260 : 320, position: 'relative' }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
                             data={statusData}
                             dataKey="value"
                             nameKey="name"
-                            innerRadius={70}
-                            outerRadius={110}
+                            innerRadius={isMobile ? 54 : 70}
+                            outerRadius={isMobile ? 88 : 110}
                             labelLine={false}
                             label={(props: unknown) => {
                               // prefer using payload percent (our precomputed percent) to avoid Recharts inconsistencies
@@ -231,7 +234,7 @@ export default function DataQualityPage() {
 
                       {/* centered big percent for valid data */}
                       <div style={{ position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', pointerEvents: 'none', textAlign: 'center' }}>
-                        <div style={{ fontSize: 28, fontWeight: 700, color: '#163253', lineHeight: 1 }}>{statusData.find((s) => s.key === 'valid')?.percent ?? 0}%</div>
+                        <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 700, color: '#163253', lineHeight: 1 }}>{statusData.find((s) => s.key === 'valid')?.percent ?? 0}%</div>
                         <div style={{ fontSize: 12, color: '#42546B' }}>Hợp lệ</div>
                       </div>
                     </div>

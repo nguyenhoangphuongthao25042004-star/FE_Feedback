@@ -6,7 +6,6 @@ import type { LoginRequest } from '../types/auth.types'
 import { loginInstructorApi } from '../../instructor/api/instructor.api'
 import { loginStudentApi } from '../../student/api/student.auth.api'
 import { useAuthStore } from '../store/auth.store'
-import logo from '../../../assets/stu-logo.png'
 
 const { Title, Text } = Typography
 
@@ -62,16 +61,6 @@ export default function LoginPage() {
           textAlign: 'center'
         }}
       >
-        <img
-          src={logo}
-          alt="STU"
-          style={{
-            display: 'block',
-            margin: '0 auto 16px',
-            width: 140
-          }}
-        />
-
         <Title
           style={{
             fontSize: 26,
