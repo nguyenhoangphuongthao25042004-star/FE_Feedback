@@ -17,15 +17,15 @@ import InstructorCoursesPage from '../modules/instructor/pages/CoursesPage'
 import InstructorCourseDetailPage from '../modules/instructor/pages/CourseDetailPage'
 import InstructorQualityPage from '../modules/instructor/pages/QualityPage'
 import InstructorFeedbackPage from '../modules/instructor/pages/FeedbackPage'
-import InstructorTrendsPage from '../modules/instructor/pages/TrendsPage'
 import InstructorRecommendationsPage from '../modules/instructor/pages/RecommendationsPage'
 import InstructorProfilePage from '../modules/instructor/pages/ProfilePage'
 import AdminDashboardPage from '../modules/admin/pages/DashboardPage'
 import CourseRankingPage from '../modules/admin/pages/CourseRankingPage'
 import InstructorRankingPage from '../modules/admin/pages/InstructorRankingPage'
-import AnalyticsPage from '../modules/admin/pages/AnalyticsPage'
 import DataQualityPage from '../modules/admin/pages/DataQualityPage'
-import ReportsPage from '../modules/admin/pages/ReportsPage'
+import RecommendationsPage from '../modules/admin/pages/RecommendationsPage'
+import CourseDrilldownPage from '../modules/admin/pages/CourseDrilldownPage'
+import InstructorDrilldownPage from '../modules/admin/pages/InstructorDrilldownPage'
 
 // Cấu hình toàn bộ route chính của ứng dụng
 export default function AppRoutes() {
@@ -51,7 +51,7 @@ export default function AppRoutes() {
         <Route path="/instructor/courses" element={<InstructorLayout><InstructorCoursesPage /></InstructorLayout>} />
         <Route path="/instructor/course/:courseId" element={<InstructorLayout><InstructorCourseDetailPage /></InstructorLayout>} />
         <Route path="/instructor/quality" element={<InstructorLayout><InstructorQualityPage /></InstructorLayout>} />
-        <Route path="/instructor/trends" element={<InstructorLayout><InstructorTrendsPage /></InstructorLayout>} />
+        <Route path="/instructor/trends" element={<Navigate to="/instructor/recommendations" replace />} />
         <Route path="/instructor/feedback" element={<InstructorLayout><InstructorFeedbackPage /></InstructorLayout>} />
         <Route path="/instructor/recommendations" element={<InstructorLayout><InstructorRecommendationsPage /></InstructorLayout>} />
         <Route path="/instructor/profile" element={<InstructorLayout><InstructorProfilePage /></InstructorLayout>} />
@@ -60,9 +60,10 @@ export default function AppRoutes() {
         <Route path="/admin/dashboard" element={<AdminLayout><AdminDashboardPage /></AdminLayout>} />
         <Route path="/admin/course-ranking" element={<AdminLayout><CourseRankingPage /></AdminLayout>} />
         <Route path="/admin/instructor-ranking" element={<AdminLayout><InstructorRankingPage /></AdminLayout>} />
-        <Route path="/admin/analytics" element={<AdminLayout><AnalyticsPage /></AdminLayout>} />
+        <Route path="/admin/recommendations" element={<AdminLayout><RecommendationsPage /></AdminLayout>} />
         <Route path="/admin/data-quality" element={<AdminLayout><DataQualityPage /></AdminLayout>} />
-        <Route path="/admin/reports" element={<AdminLayout><ReportsPage /></AdminLayout>} />
+        <Route path="/course/:id" element={<AdminLayout><CourseDrilldownPage /></AdminLayout>} />
+        <Route path="/instructor/:id" element={<AdminLayout><InstructorDrilldownPage /></AdminLayout>} />
 
         {/* Route không hợp lệ sẽ quay về login */}
         <Route path="*" element={<Navigate to="/login" replace />} />

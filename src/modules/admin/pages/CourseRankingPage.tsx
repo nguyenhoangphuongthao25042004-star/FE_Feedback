@@ -1,203 +1,260 @@
-import React, { useEffect, useMemo, useState } from 'react'
-import { Row, Col, Card, Select, Table, Tag, Empty, Radio, Button } from 'antd'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowDownOutlined, ArrowUpOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
+import { Button, Card, Col, Modal, List, Progress, Radio, Row, Space, Spin, Statistic, Table, Tag, Typography } from 'antd'
+import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell } from 'recharts'
 import type { ColumnsType } from 'antd/es/table'
-import { ArrowUpOutlined, ArrowDownOutlined, MinusOutlined, FilterOutlined, FilterFilled } from '@ant-design/icons'
+import type { KhuyenNghi } from '../types/drilldown.types'
+
 import PageHeader from '../../../components/layout/PageHeader'
-import { useUiStore } from '../../../stores/ui.store'
+import EmptyState from '../../../components/utility/EmptyState'
+import ErrorState from '../../../components/utility/ErrorState'
+import { getCourseDetail } from '../api/drilldown.api'
+import TrendLineChart from '../components/drilldown/TrendLineChart'
 
-type CourseRow = {
+const MAU_CHINH = '#005BAC'
+
+type DoKho = 'Dễ' | 'Trung bình' | 'Khó'
+type TrangThai = 'Ổn định' | 'Cần rà soát' | 'Nguy cơ'
+
+type DongMonHoc = {
+  rank: number
   id: string
-  subject: string
-  responses: number
-  qi: number
-  difficulty: 'Dễ' | 'Trung bình' | 'Khó'
-  trend: number // delta from previous period
-  alert?: boolean
+  tenMonHoc: string
+  soPhanHoi: number
+  qiTrungBinh: number
+  qiTrongSo: number
+  diemTB: number
+  doKho: DoKho
+  xuHuong: number
+  doTinCay: number
+  trangThai: TrangThai
+  goiY: string
 }
 
-// --- Helpers / Business logic ---
-// Assumptions made:
-// - trend in the data may be either a percent (e.g. 12 for 12%) or a fraction (e.g. 0.12 for 12%).
-//   normalizeTrendToPercent will convert small absolute values (<=1) by multiplying by 100.
-// - difficulty in data is categorical; map to numeric scale for status rules:
-//   Dễ -> 2.0, Trung bình -> 3.5, Khó -> 4.5
-// - QI values may be >5 in some datasets; normalizeQi will convert >5 to a 0-5 scale by dividing by 2.
-
-type TrendInfo = { label: string; color: string; icon: React.ReactNode | null }
-type StatusInfo = { label: string; color: string }
-
-function normalizeTrendToPercent(t: number): number {
-  if (t === null || t === undefined || Number.isNaN(t)) return 0
-  // If the absolute value is <= 1, assume it's a fraction and convert to percent
-  return Math.abs(t) <= 1 ? t * 100 : t
-}
-
-function difficultyToNumber(d: CourseRow['difficulty'] | number): number {
-  if (typeof d === 'number') return d
-  switch (d) {
-    case 'Dễ':
-      return 2.0
-    case 'Trung bình':
-      return 3.5
-    case 'Khó':
-      return 4.5
-    default:
-      return 3.5
+const duLieuMau: DongMonHoc[] = [
+  {
+    rank: 1,
+    id: 'ml101',
+    tenMonHoc: 'Nhập môn Học máy',
+    soPhanHoi: 184,
+    qiTrungBinh: 4.3,
+    qiTrongSo: 4.4,
+    diemTB: 8.5,
+    doKho: 'Khó',
+    xuHuong: 7.2,
+    doTinCay: 93,
+    trangThai: 'Ổn định',
+    goiY: 'Môn chất lượng cao'
+  },
+  {
+    rank: 2,
+    id: 'web101',
+    tenMonHoc: 'Lập trình Web',
+    soPhanHoi: 160,
+    qiTrungBinh: 4.1,
+    qiTrongSo: 4.0,
+    diemTB: 8.2,
+    doKho: 'Trung bình',
+    xuHuong: 3.5,
+    doTinCay: 88,
+    trangThai: 'Ổn định',
+    goiY: 'Theo dõi định kỳ'
+  },
+  {
+    rank: 3,
+    id: 'dsa201',
+    tenMonHoc: 'Cấu trúc dữ liệu và Giải thuật',
+    soPhanHoi: 142,
+    qiTrungBinh: 3.9,
+    qiTrongSo: 3.8,
+    diemTB: 7.7,
+    doKho: 'Khó',
+    xuHuong: -4.8,
+    doTinCay: 82,
+    trangThai: 'Cần rà soát',
+    goiY: 'Theo dõi định kỳ'
+  },
+  {
+    rank: 4,
+    id: 'ai201',
+    tenMonHoc: 'Nhập môn Trí tuệ nhân tạo',
+    soPhanHoi: 130,
+    qiTrungBinh: 2.8,
+    qiTrongSo: 2.9,
+    diemTB: 7.2,
+    doKho: 'Dễ',
+    xuHuong: -12.5,
+    doTinCay: 79,
+    trangThai: 'Nguy cơ',
+    goiY: 'Xu hướng giảm mạnh'
+  },
+  {
+    rank: 5,
+    id: 'db301',
+    tenMonHoc: 'Hệ quản trị cơ sở dữ liệu',
+    soPhanHoi: 124,
+    qiTrungBinh: 3.7,
+    qiTrongSo: 3.6,
+    diemTB: 7.9,
+    doKho: 'Trung bình',
+    xuHuong: -1.2,
+    doTinCay: 85,
+    trangThai: 'Cần rà soát',
+    goiY: 'Theo dõi định kỳ'
+  },
+  {
+    rank: 6,
+    id: 'bus102',
+    tenMonHoc: 'Giao tiếp trong kinh doanh',
+    soPhanHoi: 118,
+    qiTrungBinh: 2.7,
+    qiTrongSo: 2.8,
+    diemTB: 7.5,
+    doKho: 'Dễ',
+    xuHuong: -6.4,
+    doTinCay: 74,
+    trangThai: 'Nguy cơ',
+    goiY: 'Rà soát phương pháp'
+  },
+  {
+    rank: 7,
+    id: 'mkt205',
+    tenMonHoc: 'Marketing số',
+    soPhanHoi: 105,
+    qiTrungBinh: 3.6,
+    qiTrongSo: 3.7,
+    diemTB: 7.8,
+    doKho: 'Trung bình',
+    xuHuong: 2.4,
+    doTinCay: 76,
+    trangThai: 'Ổn định',
+    goiY: 'Theo dõi định kỳ'
+  },
+  {
+    rank: 8,
+    id: 'eco101',
+    tenMonHoc: 'Kinh tế vi mô',
+    soPhanHoi: 96,
+    qiTrungBinh: 3.1,
+    qiTrongSo: 3.2,
+    diemTB: 7.3,
+    doKho: 'Khó',
+    xuHuong: -11.1,
+    doTinCay: 68,
+    trangThai: 'Nguy cơ',
+    goiY: 'Xu hướng giảm mạnh'
   }
+]
+
+function mauDoKho(doKho: DoKho) {
+  if (doKho === 'Dễ') return { text: '#3B8C2A', bg: '#EEF8EC', border: '#D8F0D2' }
+  if (doKho === 'Trung bình') return { text: '#2F6C9E', bg: '#ECF4FF', border: '#D7E8FF' }
+  return { text: '#C54949', bg: '#FDEEEF', border: '#F8DADD' }
 }
 
-function normalizeQi(q: number): number {
-  if (q === null || q === undefined || Number.isNaN(q)) return 0
-  return q > 5 ? q / 2 : q
+function mauTrangThai(trangThai: TrangThai) {
+  if (trangThai === 'Ổn định') return { text: '#4F9B2E', bg: '#F1F9E9', border: '#DDF0CB' }
+  if (trangThai === 'Cần rà soát') return { text: '#A87400', bg: '#FFF8E8', border: '#FBE9BC' }
+  return { text: '#C2352A', bg: '#FFF0EF', border: '#F8D3D0' }
 }
 
-// Difficulty styles copied from student CoursesPage to keep visual parity
-const difficultyTagStyleMapAdmin: Record<NonNullable<CourseRow['difficulty']>, { background: string; color: string; borderColor: string }> = {
-  'Dễ': { background: '#EAF7EE', color: '#389E0D', borderColor: '#D1F0DC' },
-  'Trung bình': { background: '#E8F1FF', color: '#2F5E9E', borderColor: '#D5E6FF' },
-  'Khó': { background: '#FDECEF', color: '#CF1322', borderColor: '#F7D7DE' }
-}
-
-function getTrendLabel(trend_value: number): TrendInfo {
-  const p = normalizeTrendToPercent(trend_value)
-  if (p > 5) {
-    return { label: `Tăng ${p.toFixed(0)}%`, color: '#1DA57A', icon: <ArrowUpOutlined style={{ color: '#1DA57A', fontSize: 16 }} /> }
+function hienThiXuHuong(xuHuong: number) {
+  if (xuHuong > 0) {
+    return (
+      <Space size={6}>
+        <ArrowUpOutlined style={{ color: '#2EAF62' }} />
+        <Typography.Text style={{ color: '#2EAF62', fontWeight: 600 }}>{`${xuHuong.toFixed(1)}%`}</Typography.Text>
+      </Space>
+    )
   }
 
-  if (p < -5) {
-    return { label: `Giảm ${Math.abs(p).toFixed(0)}%`, color: '#D9534F', icon: <ArrowDownOutlined style={{ color: '#D9534F', fontSize: 16 }} /> }
+  if (xuHuong < 0) {
+    return (
+      <Space size={6}>
+        <ArrowDownOutlined style={{ color: '#D9534F' }} />
+        <Typography.Text style={{ color: '#D9534F', fontWeight: 600 }}>{`${Math.abs(xuHuong).toFixed(1)}%`}</Typography.Text>
+      </Space>
+    )
   }
 
-  return { label: 'Ổn định', color: '#8C9AAE', icon: <MinusOutlined style={{ color: '#8C9AAE', fontSize: 16 }} /> }
+  return (
+    <Space size={6}>
+      <MinusOutlined style={{ color: '#8C8C8C' }} />
+      <Typography.Text style={{ color: '#8C8C8C', fontWeight: 600 }}>0.0%</Typography.Text>
+    </Space>
+  )
 }
-
-function getTrendKey(trend_value: number) {
-  const p = normalizeTrendToPercent(trend_value)
-  if (p > 5) return 'up'
-  if (p < -5) return 'down'
-  return 'stable'
-}
-
-function getStatus(qiRaw: number, trend_value: number, difficultyRaw: CourseRow['difficulty'] | number): StatusInfo {
-  const qi = normalizeQi(qiRaw)
-  const trend = normalizeTrendToPercent(trend_value)
-  const difficulty = difficultyToNumber(difficultyRaw)
-
-  // Nguy cơ cao
-  if (qi < 2.5 || (qi < 3 && trend < -10) || (difficulty > 4 && qi < 3)) {
-    return { label: 'Nguy cơ cao', color: 'red' }
-  }
-
-  // Cần theo dõi
-  if (qi < 3.5 || trend < -5 || difficulty > 3.5) {
-    return { label: 'Cần theo dõi', color: 'orange' }
-  }
-
-  // Ổn định
-  return { label: 'Ổn định', color: 'green' }
-}
-
-// cardStyle removed (not used after removing the search card)
-const cardStyle = {
-  borderRadius: 20,
-  border: '1px solid #D7E1F0',
-  boxShadow: '0 12px 28px rgba(0, 45, 109, 0.08)'
-} as const
 
 export default function CourseRankingPage() {
-  const [loading, setLoading] = useState(true)
-  const [data, setData] = useState<CourseRow[]>([])
-  const searchKeyword = useUiStore((state) => state.searchKeyword)
-  const [difficulty, setDifficulty] = useState<CourseRow['difficulty'] | undefined>(undefined)
-  const [trendFilter, setTrendFilter] = useState<string | null>(null)
+  const [sortConfig, setSortConfig] = useState<{
+    key: 'soPhanHoi' | 'qiTrungBinh' | 'qiTrongSo' | 'diemTB' | 'xuHuong' | 'doTinCay' | null
+    order: 'asc' | 'desc' | null
+  }>({ key: null, order: null })
 
-  useEffect(() => {
-    let mounted = true
+  const [visibleDrawer, setVisibleDrawer] = useState(false)
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null)
 
-    async function load() {
-      try {
-        const res = await fetch('/api/admin/course-ranking')
-        if (!res.ok) throw new Error('network')
-        const json = (await res.json()) as CourseRow[]
-        if (mounted) setData(json)
-      } catch {
-        if (mounted) {
-          // fallback mock data
-          setData([
-            { id: 'c1', subject: 'Cấu trúc dữ liệu', responses: 124, qi: 2.6, difficulty: 'Khó', trend: -0.4, alert: true },
-            { id: 'c2', subject: 'Lập trình web', responses: 98, qi: 4.2, difficulty: 'Trung bình', trend: 0.1 },
-            { id: 'c3', subject: 'Cơ sở dữ liệu', responses: 86, qi: 4.0, difficulty: 'Trung bình', trend: 0.0 },
-            { id: 'c4', subject: 'Mạng máy tính', responses: 54, qi: 2.9, difficulty: 'Khó', trend: -0.2, alert: true },
-            { id: 'c5', subject: 'AI cơ bản', responses: 73, qi: 4.5, difficulty: 'Dễ', trend: 0.3 }
-          ])
-        }
-      } finally {
-        if (mounted) setLoading(false)
+  const duLieuSapXep = useMemo(() => {
+    if (!sortConfig.key || !sortConfig.order) return duLieuMau
+
+    const direction = sortConfig.order === 'asc' ? 1 : -1
+    const data = [...duLieuMau]
+    const sortKey = sortConfig.key
+
+    data.sort((a, b) => {
+      const aValue = a[sortKey]
+      const bValue = b[sortKey]
+
+      if (typeof aValue === 'number' && typeof bValue === 'number') {
+        return (aValue - bValue) * direction
       }
-    }
-    load()
-    return () => {
-      mounted = false
-    }
-  }, [])
 
-  
-
-  const filtered = useMemo(() => {
-    const normalizedKeyword = searchKeyword.trim().toLowerCase()
+      return 0
+    })
 
     return data
-      .filter((r) => (normalizedKeyword ? r.subject.toLowerCase().includes(normalizedKeyword) : true))
-      .filter((r) => (difficulty ? r.difficulty === difficulty : true))
-      .filter((r) => (trendFilter ? getTrendKey(r.trend) === trendFilter : true))
-  }, [data, difficulty, searchKeyword, trendFilter])
+  }, [sortConfig])
 
-  // sortConfig: which column is being sorted and in which order
-  const [sortConfig, setSortConfig] = useState<{ key: 'responses' | 'qi' | null; order: 'asc' | 'desc' | null }>({ key: null, order: null })
-
-  // Apply sorting to the filtered data according to sortConfig
-  const sortedData = useMemo(() => {
-    if (!sortConfig.key || !sortConfig.order) return filtered
-
-    const arr = [...filtered]
-    const direction = sortConfig.order === 'asc' ? 1 : -1
-
-    if (sortConfig.key === 'responses') {
-      arr.sort((a, b) => (a.responses - b.responses) * direction)
-    } else if (sortConfig.key === 'qi') {
-      arr.sort((a, b) => (normalizeQi(a.qi) - normalizeQi(b.qi)) * direction)
-    }
-
-    return arr
-  }, [filtered, sortConfig])
-
-  // Small dropdown used as filter UI for sorting (matches screenshot)
-  function SortFilterDropdown({ columnKey, confirm, clearFilters }: { columnKey: 'responses' | 'qi'; confirm?: () => void; clearFilters?: () => void }) {
+  function BoLocSapXep({
+    columnKey,
+    confirm,
+    clearFilters
+  }: {
+    columnKey: 'soPhanHoi' | 'qiTrungBinh' | 'qiTrongSo' | 'diemTB' | 'xuHuong' | 'doTinCay'
+    confirm?: () => void
+    clearFilters?: () => void
+  }) {
     const [value, setValue] = useState<'asc' | 'desc' | null>(sortConfig.key === columnKey ? sortConfig.order : null)
 
     return (
       <div style={{ padding: 12, width: 180 }}>
         <Radio.Group
-          onChange={(e) => setValue(e.target.value)}
           value={value}
+          onChange={(event) => setValue(event.target.value)}
           style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
         >
-          <Radio value={'asc'}>Tăng dần</Radio>
-          <Radio value={'desc'}>Giảm dần</Radio>
+          <Radio value="asc">Tăng dần</Radio>
+          <Radio value="desc">Giảm dần</Radio>
         </Radio.Group>
 
-        <div style={{ borderTop: '1px solid #EEF2F7', marginTop: 12, paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div
+          style={{
+            borderTop: '1px solid #EEF2F7',
+            marginTop: 12,
+            paddingTop: 12,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}
+        >
           <Button
             type="text"
             onClick={() => {
               setValue(null)
               setSortConfig({ key: null, order: null })
-              if (clearFilters) {
-                clearFilters()
-              }
-              if (confirm) {
-                confirm()
-              }
+              clearFilters?.()
+              confirm?.()
             }}
           >
             Reset
@@ -206,9 +263,7 @@ export default function CourseRankingPage() {
             type="primary"
             onClick={() => {
               setSortConfig({ key: columnKey, order: value })
-              if (confirm) {
-                confirm()
-              }
+              confirm?.()
             }}
           >
             OK
@@ -218,157 +273,87 @@ export default function CourseRankingPage() {
     )
   }
 
-  // Dropdown for filtering difficulty (single choice)
-  function DifficultyFilterDropdown({ confirm, clearFilters }: { confirm?: () => void; clearFilters?: () => void }) {
-    const options: CourseRow['difficulty'][] = ['Dễ', 'Trung bình', 'Khó']
-    const [value, setValue] = useState<CourseRow['difficulty'] | null>(difficulty ?? null)
-
-    return (
-      <div style={{ padding: 12, width: 180 }}>
-        <Radio.Group
-          onChange={(e) => setValue(e.target.value)}
-          value={value}
-          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-        >
-          {options.map((o) => (
-            <Radio key={o} value={o}>
-              {o}
-            </Radio>
-          ))}
-        </Radio.Group>
-
-        <div style={{ borderTop: '1px solid #EEF2F7', marginTop: 12, paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button
-            type="text"
-            onClick={() => {
-              setValue(null)
-              setDifficulty(undefined)
-              if (clearFilters) clearFilters()
-              if (confirm) confirm()
-            }}
-          >
-            Reset
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              setDifficulty(value ?? undefined)
-              if (confirm) confirm()
-            }}
-          >
-            OK
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  // Dropdown for filtering trend: up/down/stable
-  function TrendFilterDropdown({ confirm, clearFilters }: { confirm?: () => void; clearFilters?: () => void }) {
-    const options = [
-      { key: 'up', label: 'Tăng dần' },
-      { key: 'down', label: 'Giảm dần' },
-      { key: 'stable', label: 'Ổn định' }
-    ] as const
-
-    const [value, setValue] = useState<string | null>(trendFilter ?? null)
-
-    return (
-      <div style={{ padding: 12, width: 180 }}>
-        <Radio.Group
-          onChange={(e) => setValue(e.target.value)}
-          value={value}
-          style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
-        >
-          {options.map((o) => (
-            <Radio key={o.key} value={o.key}>
-              {o.label}
-            </Radio>
-          ))}
-        </Radio.Group>
-
-        <div style={{ borderTop: '1px solid #EEF2F7', marginTop: 12, paddingTop: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Button
-            type="text"
-            onClick={() => {
-              setValue(null)
-              setTrendFilter(null)
-              if (clearFilters) clearFilters()
-              if (confirm) confirm()
-            }}
-          >
-            Reset
-          </Button>
-          <Button
-            type="primary"
-            onClick={() => {
-              setTrendFilter(value)
-              if (confirm) confirm()
-            }}
-          >
-            OK
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
-  const columns: ColumnsType<CourseRow> = [
+  const columns: ColumnsType<DongMonHoc> = [
     {
-      title: 'Thứ hạng',
+      title: 'Hạng',
       dataIndex: 'rank',
       key: 'rank',
-      width: 200,
+      width: 48,
       align: 'center',
-      render: (_: unknown, __: unknown, index: number) => <div style={{ fontWeight: 700 }}>{index + 1}</div>
+      render: (value: number) => <Typography.Text style={{ color: MAU_CHINH, fontWeight: 700 }}>{value}</Typography.Text>
     },
     {
-      title: 'Tên môn',
-      dataIndex: 'subject',
-      key: 'subject',
-      align: 'center',
-      render: (text: string) => <div style={{ color: '#163253', fontWeight: 600 }}>{text}</div>
+      title: 'Tên môn học',
+      dataIndex: 'tenMonHoc',
+      key: 'tenMonHoc',
+      width: 170,
+      render: (value: string) => <Typography.Text strong>{value}</Typography.Text>
     },
     {
       title: 'Số phản hồi',
-      dataIndex: 'responses',
-      key: 'responses',
-      width: 140,
+      dataIndex: 'soPhanHoi',
+      key: 'soPhanHoi',
+      width: 84,
       align: 'center',
-      filterDropdown: (props) => (props.visible ? <SortFilterDropdown columnKey="responses" {...props} /> : null),
-      filterIcon: () => (sortConfig.key === 'responses' ? <FilterFilled style={{ color: '#000' }} /> : <FilterOutlined style={{ color: '#000' }} />)
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <BoLocSapXep columnKey="soPhanHoi" confirm={confirm} clearFilters={clearFilters} />
+      ),
+      filterIcon: () => (sortConfig.key === 'soPhanHoi' ? <FilterFilled style={{ color: MAU_CHINH }} /> : <FilterOutlined />)
     },
     {
-      title: 'QI môn',
-      dataIndex: 'qi',
-      key: 'qi',
-      width: 200,
+      title: 'QI trung bình',
+      dataIndex: 'qiTrungBinh',
+      key: 'qiTrungBinh',
+      width: 84,
       align: 'center',
-  filterDropdown: (props) => (props.visible ? <SortFilterDropdown columnKey="qi" {...props} /> : null),
-  filterIcon: () => (sortConfig.key === 'qi' ? <FilterFilled style={{ color: '#000' }} /> : <FilterOutlined style={{ color: '#000' }} />),
-      render: (v: number) => {
-        const normalized = v > 5 ? v / 2 : v
-        return <div style={{ color: '#163253', fontWeight: 400 }}>{normalized.toFixed(1)}/5</div>
-      }
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <BoLocSapXep columnKey="qiTrungBinh" confirm={confirm} clearFilters={clearFilters} />
+      ),
+      filterIcon: () => (sortConfig.key === 'qiTrungBinh' ? <FilterFilled style={{ color: MAU_CHINH }} /> : <FilterOutlined />),
+      render: (value: number) => value.toFixed(1)
+    },
+    {
+      title: 'QI có trọng số',
+      dataIndex: 'qiTrongSo',
+      key: 'qiTrongSo',
+      width: 90,
+      align: 'center',
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <BoLocSapXep columnKey="qiTrongSo" confirm={confirm} clearFilters={clearFilters} />
+      ),
+      filterIcon: () => (sortConfig.key === 'qiTrongSo' ? <FilterFilled style={{ color: MAU_CHINH }} /> : <FilterOutlined />),
+      render: (value: number) => value.toFixed(1)
+    },
+    {
+      title: 'Điểm TB',
+      dataIndex: 'diemTB',
+      key: 'diemTB',
+      width: 70,
+      align: 'center',
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <BoLocSapXep columnKey="diemTB" confirm={confirm} clearFilters={clearFilters} />
+      ),
+      filterIcon: () => (sortConfig.key === 'diemTB' ? <FilterFilled style={{ color: MAU_CHINH }} /> : <FilterOutlined />),
+      render: (value: number) => value.toFixed(1)
     },
     {
       title: 'Độ khó',
-      dataIndex: 'difficulty',
-      key: 'difficulty',
-      width: 200,
+      dataIndex: 'doKho',
+      key: 'doKho',
+      width: 80,
       align: 'center',
-      filterDropdown: (props) => (props.visible ? <DifficultyFilterDropdown {...props} /> : null),
-      filterIcon: () => (difficulty ? <FilterFilled style={{ color: '#163253' }} /> : <FilterOutlined style={{ color: '#163253' }} />),
-      render: (value: CourseRow['difficulty']) => {
-        const style = difficultyTagStyleMapAdmin[value]
+      render: (value: DoKho) => {
+        const style = mauDoKho(value)
         return (
           <Tag
             style={{
-              background: style.background,
-              color: style.color,
-              borderColor: style.borderColor,
+              margin: 0,
               borderRadius: 999,
-              paddingInline: 12
+              borderColor: style.border,
+              background: style.bg,
+              color: style.text,
+              fontSize: 11,
+              paddingInline: 8
             }}
           >
             {value}
@@ -378,75 +363,429 @@ export default function CourseRankingPage() {
     },
     {
       title: 'Xu hướng',
-      dataIndex: 'trend',
-      key: 'trend',
-      width: 200,
+      dataIndex: 'xuHuong',
+      key: 'xuHuong',
+      width: 88,
       align: 'center',
-      filterDropdown: (props) => (props.visible ? <TrendFilterDropdown {...props} /> : null),
-      filterIcon: () => (trendFilter ? <FilterFilled style={{ color: '#163253' }} /> : <FilterOutlined style={{ color: '#163253' }} />),
-      render: (t: number) => {
-        const info = getTrendLabel(t)
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <BoLocSapXep columnKey="xuHuong" confirm={confirm} clearFilters={clearFilters} />
+      ),
+      filterIcon: () => (sortConfig.key === 'xuHuong' ? <FilterFilled style={{ color: MAU_CHINH }} /> : <FilterOutlined />),
+      render: (value: number) => hienThiXuHuong(value)
+    },
+    {
+      title: 'Độ tin cậy',
+      dataIndex: 'doTinCay',
+      key: 'doTinCay',
+      width: 108,
+      align: 'center',
+      filterDropdown: ({ confirm, clearFilters }) => (
+        <BoLocSapXep columnKey="doTinCay" confirm={confirm} clearFilters={clearFilters} />
+      ),
+      filterIcon: () => (sortConfig.key === 'doTinCay' ? <FilterFilled style={{ color: MAU_CHINH }} /> : <FilterOutlined />),
+      render: (value: number) => <Typography.Text style={{ color: '#1F3E67', fontWeight: 600 }}>{`${value}%`}</Typography.Text>
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'trangThai',
+      key: 'trangThai',
+      width: 95,
+      align: 'center',
+      render: (value: TrangThai) => {
+        const style = mauTrangThai(value)
         return (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            {info.icon}
-            <span style={{ color: info.color, fontWeight: 600 }}>{info.label}</span>
-          </div>
+          <Tag
+            style={{
+              margin: 0,
+              borderRadius: 999,
+              borderColor: style.border,
+              background: style.bg,
+              color: style.text,
+              fontSize: 11,
+              paddingInline: 8
+            }}
+          >
+            {value}
+          </Tag>
         )
       }
     },
     {
-      title: 'Trạng thái cảnh báo',
-      dataIndex: 'alert',
-      key: 'alert',
-      width: 200,
+      title: 'Gợi ý',
+      dataIndex: 'goiY',
+      key: 'goiY',
+      width: 112,
+      render: (value: string) => <Typography.Text>{value}</Typography.Text>
+    },
+    {
+      title: 'Hành động',
+      key: 'action',
+      width: 86,
       align: 'center',
-      render: (_: boolean, record: CourseRow) => {
-        const status = getStatus(record.qi, record.trend, record.difficulty)
+      render: (_value, record) => (
+        <Button 
+          type="link" 
+          style={{ padding: 0, fontWeight: 600 }} 
+          onClick={() => {
+            setSelectedCourseId(record.id)
+            setVisibleDrawer(true)
+          }}
+        >
+          Xem chi tiết
+        </Button>
+      )
+    }
+  ]
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div
+        style={{
+          background: '#FFFFFF',
+          border: '1px solid #E8EEF8',
+          borderRadius: 16,
+          padding: 24,
+          boxShadow: '0 8px 20px rgba(28,61,102,0.04)'
+        }}
+      >
+        <PageHeader
+          title="Bảng xếp hạng môn học"
+          description="Bảng xếp hạng môn học theo chỉ số QI và mức độ tin cậy"
+          contentGap={8}
+        />
+      </div>
+
+      <Card style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={duLieuSapXep}
+          pagination={{ pageSize: 8, showSizeChanger: false, position: ['bottomRight'] }}
+        />
+      </Card>
+
+      <CourseDetailDrawer
+        visible={visibleDrawer}
+        courseId={selectedCourseId}
+        onClose={() => setVisibleDrawer(false)}
+      />
+    </div>
+  )
+}
+
+function CourseDetailDrawer({ 
+  visible, 
+  courseId, 
+  onClose 
+}: { 
+  visible: boolean
+  courseId: string | null
+  onClose: () => void
+}) {
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['course-detail', courseId],
+    queryFn: () => getCourseDetail(courseId || ''),
+    enabled: Boolean(courseId && visible)
+  })
+  const [factorChartType, setFactorChartType] = useState<'bar' | 'radar'>('bar')
+
+  const tongDanhGia = useMemo(() => {
+    return data?.phanPhoiDanhGia.reduce((tong, item) => tong + item.soLuong, 0) ?? 0
+  }, [data?.phanPhoiDanhGia])
+
+  const phanPhoiTheoTyLe = useMemo(() => {
+    if (!data?.phanPhoiDanhGia?.length || tongDanhGia === 0) return []
+    return data.phanPhoiDanhGia.map((item) => ({
+      ...item,
+      tyLe: Number(((item.soLuong / tongDanhGia) * 100).toFixed(1))
+    }))
+  }, [data?.phanPhoiDanhGia, tongDanhGia])
+
+  if (isError) {
+    return (
+      <Modal title="Chi tiết môn học" onCancel={onClose} open={visible} footer={null}>
+        <ErrorState
+          title="Không thể tải dữ liệu chi tiết môn học"
+          description="Vui lòng thử lại sau ít phút."
+          onRetry={() => refetch()}
+        />
+      </Modal>
+    )
+  }
+
+  if (!data && !isLoading) {
+    return (
+      <Modal title="Chi tiết môn học" onCancel={onClose} open={visible} footer={null}>
+        <EmptyState title="Không tìm thấy môn học" description="Vui lòng kiểm tra lại mã môn học hoặc chọn môn khác." />
+      </Modal>
+    )
+  }
+
+  const getTrangThaiTag = (qiTrung: number) => {
+    if (qiTrung >= 4.0) return { text: 'Ổn định', color: '#3B8C2A', bg: '#F1F9E9', border: '#DDF0CB' }
+    if (qiTrung >= 3.0) return { text: 'Cần rà soát', color: '#A87400', bg: '#FFF8E8', border: '#FBE9BC' }
+    return { text: 'Nguy cơ', color: '#C2352A', bg: '#FFF0EF', border: '#F8D3D0' }
+  }
+
+  const getSeverityStyle = (severity: 'Thấp' | 'Trung bình' | 'Cao') => {
+    if (severity === 'Cao') return { color: '#C54949', bg: '#FDEEEF', border: '#F8DADD' }
+    if (severity === 'Trung bình') return { color: '#A87400', bg: '#FFF8E8', border: '#FBE9BC' }
+    return { color: '#3B8C2A', bg: '#F1F9E9', border: '#DDF0CB' }
+  }
+
+  const getActionStatus = (priority: number, severity: 'Thấp' | 'Trung bình' | 'Cao') => {
+    if (severity === 'Cao' || priority >= 4) return getTrangThaiTag(2.7)
+    if (severity === 'Trung bình' || priority >= 3) return getTrangThaiTag(3.3)
+    return getTrangThaiTag(4.2)
+  }
+
+  const recommendationColumns: ColumnsType<KhuyenNghi> = [
+    {
+      title: 'Hành động can thiệp',
+      dataIndex: 'chiTiet',
+      key: 'chiTiet',
+      render: (value: string) => (
+        <Typography.Text style={{ color: '#1F2937', fontWeight: 500, fontSize: 13, whiteSpace: 'normal', wordBreak: 'break-word' }}>
+          {value}
+        </Typography.Text>
+      )
+    },
+    {
+      title: 'Mức độ nghiêm trọng',
+      dataIndex: 'mucDoNghiemTrong',
+      key: 'mucDoNghiemTrong',
+      width: 130,
+      render: (value: 'Thấp' | 'Trung bình' | 'Cao') => {
+        const style = getSeverityStyle(value)
         return (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Tag color={status.color} style={{ fontWeight: 600 }}>{status.label}</Tag>
-          </div>
+          <Tag style={{ margin: 0, color: style.color, background: style.bg, borderColor: style.border, fontWeight: 600 }}>
+            {value}
+          </Tag>
+        )
+      }
+    },
+    {
+      title: 'Điểm ưu tiên',
+      dataIndex: 'diemUuTien',
+      key: 'diemUuTien',
+      width: 130,
+      render: (value: number) => (
+        <Space direction="vertical" size={2} style={{ width: '100%' }}>
+          <Typography.Text style={{ color: MAU_CHINH, fontWeight: 700 }}>{value}/5</Typography.Text>
+          <Progress percent={Math.min(value * 20, 100)} showInfo={false} strokeColor={MAU_CHINH} trailColor="#E8EEF8" size="small" />
+        </Space>
+      )
+    },
+    {
+      title: 'Trạng thái',
+      key: 'trangThai',
+      width: 120,
+      render: (_, record) => {
+        const status = getActionStatus(record.diemUuTien, record.mucDoNghiemTrong)
+        return (
+          <Tag style={{ margin: 0, color: status.color, background: status.bg, borderColor: status.border, fontWeight: 600 }}>
+            {status.text}
+          </Tag>
         )
       }
     }
   ]
 
-  
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 24}}>
-      <div style={{ background: '#FFFFFF', border: '1px solid #E8EEF8', borderRadius: 16, padding: 28, boxShadow: '0 8px 20px rgba(28,61,102,0.04)' }}>
-        <Row align="top" justify="space-between">
-          <Col flex="auto">
-            <PageHeader title="Xếp hạng môn học" description="Hiển thị bảng xếp hạng các môn học" contentGap={8} />
-            </Col>
-            <Col style={{ display: 'flex', justifyContent: 'flex-end', minWidth: 240 }}>
-              <div style={{ width: 450 }}>
-                <div style={{ fontSize: 16, color: '#42546B', marginBottom: 6 }}></div>
-                <Select allowClear placeholder="Mức độ khó" size="large" style={{ width: '100%', fontSize: 16 }} value={difficulty} onChange={(v) => setDifficulty(v)}>
-                  <Select.Option value="Dễ">Dễ</Select.Option>
-                <Select.Option value="Trung bình">Trung bình</Select.Option>
-                <Select.Option value="Khó">Khó</Select.Option>
-              </Select>
-            </div>
-          </Col>
-        </Row>
-      </div>
+    <Modal 
+      title="Chi tiết môn học" 
+      onCancel={onClose} 
+      open={visible} 
+      footer={null}
+      width="92vw"
+      style={{ maxWidth: 1340 }}
+      centered
+      bodyStyle={{ maxHeight: '78vh', overflowY: 'auto', overflowX: 'hidden', padding: 22 }}
+    >
+      {isLoading ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
+          <Spin size="large" tip="Đang tải chi tiết môn học..." />
+        </div>
+      ) : data ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <Card
+            style={{
+              borderRadius: 16,
+              border: '1px solid #D7E6FA',
+              background: 'linear-gradient(120deg, #F7FBFF 0%, #EEF5FF 100%)',
+              boxShadow: '0 8px 22px rgba(0, 91, 172, 0.06)'
+            }}
+          >
+            <Row gutter={[20, 16]} align="middle">
+              <Col xs={24} md={24} lg={10}>
+                <Typography.Text style={{ color: '#607D9A', fontSize: 12, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                  Phân tích chi tiết môn học
+                </Typography.Text>
+                <Typography.Title level={3} style={{ margin: '6px 0 4px', color: MAU_CHINH }}>
+                  {data.tenMonHoc}
+                </Typography.Title>
+                <Space size={10} wrap>
+                  <Typography.Text style={{ fontSize: 13, color: '#4A5F79' }}>
+                    Mã: {data.maMonHoc}
+                  </Typography.Text>
+                  <Typography.Text style={{ fontSize: 13, color: '#4A5F79' }}>
+                    {data.soPhanHoi} phản hồi
+                  </Typography.Text>
+                  <Tag
+                    style={{
+                      margin: 0,
+                      color: getTrangThaiTag(data.diemQiTong).color,
+                      background: getTrangThaiTag(data.diemQiTong).bg,
+                      borderColor: getTrangThaiTag(data.diemQiTong).border,
+                      fontWeight: 600
+                    }}
+                  >
+                    {getTrangThaiTag(data.diemQiTong).text}
+                  </Tag>
+                </Space>
+              </Col>
+              <Col xs={24} sm={8} lg={4}>
+                <Statistic 
+                  title="QI trung bình môn" 
+                  value={data.diemQiTong} 
+                  precision={1} 
+                  suffix="/ 5"
+                  valueStyle={{ color: MAU_CHINH, fontSize: 24, fontWeight: 700 }}
+                />
+              </Col>
+              <Col xs={24} sm={8} lg={5}>
+                <Statistic 
+                  title="Độ tin cậy" 
+                  value={data.doTinCay}
+                  suffix="%"
+                  valueStyle={{ 
+                    color: data.doTinCay >= 80 ? '#2EAF62' : data.doTinCay >= 60 ? '#FAAD14' : '#D4380D',
+                    fontSize: 24,
+                    fontWeight: 'bold'
+                  }}
+                />
+              </Col>
+              <Col xs={24} sm={8} lg={5}>
+                <Statistic 
+                  title="Độ khó cảm nhận" 
+                  value={data.doKhoDiem}
+                  suffix="/ 10"
+                  valueStyle={{ color: MAU_CHINH, fontSize: 24, fontWeight: 700 }}
+                />
+              </Col>
+            </Row>
+          </Card>
 
-        <Card style={cardStyle} bodyStyle={{ padding: 0 }}>
-          {filtered.length === 0 && !loading ? (
-            <Empty description="Không có dữ liệu" style={{ padding: 40 }} />
-          ) : (
-            <Table
-              dataSource={sortedData}
-              loading={loading}
-              rowKey="id"
-              columns={columns}
-              size="middle"
-              pagination={{ pageSize: 10, position: ['bottomRight'] }}
-            />
-          )}
-        </Card>
-    </div>
-  )
-}
+          <Card
+            title="Phân rã 6 yếu tố chất lượng"
+            style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}
+            extra={
+              <Radio.Group
+                size="small"
+                value={factorChartType}
+                onChange={(event) => setFactorChartType(event.target.value)}
+                buttonStyle="solid"
+              >
+                <Radio.Button value="bar">Biểu đồ cột</Radio.Button>
+                <Radio.Button value="radar">Biểu đồ mạng nhện</Radio.Button>
+              </Radio.Group>
+            }
+          >
+            <div style={{ width: '100%', height: 320 }}>
+              <ResponsiveContainer>
+                {factorChartType === 'bar' ? (
+                  <BarChart data={data.phanRaChatLuong}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#EEF3FB" />
+                    <XAxis dataKey="ten" tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <YAxis domain={[0, 5]} tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <Tooltip formatter={(value) => [`${Number(value ?? 0).toFixed(1)} điểm`, 'Điểm']} />
+                    <Bar dataKey="diem" radius={[8, 8, 0, 0]}>
+                      {data.phanRaChatLuong.map((entry) => (
+                        <Cell
+                          key={entry.ten}
+                          fill={entry.diem >= 4 ? '#0E5EA8' : entry.diem >= 3 ? '#2E7CC3' : '#7CAEE0'}
+                        />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                ) : (
+                  <RadarChart data={data.phanRaChatLuong} outerRadius="72%">
+                    <PolarGrid stroke="#E0ECFA" />
+                    <PolarAngleAxis dataKey="ten" tick={{ fill: '#42546B', fontSize: 12 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 5]} tick={{ fill: '#8FA5BE', fontSize: 11 }} />
+                    <Radar dataKey="diem" stroke={MAU_CHINH} fill={MAU_CHINH} fillOpacity={0.35} />
+                    <Tooltip formatter={(value) => [`${Number(value ?? 0).toFixed(1)} điểm`, 'Điểm']} />
+                  </RadarChart>
+                )}
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={24} lg={12}>
+              <Card title="Xu hướng QI qua 4 học kỳ gần nhất" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+                <TrendLineChart data={data.xuHuongHocKy} />
+              </Card>
+            </Col>
+            <Col xs={24} md={24} lg={12}>
+              <Card title="Phân phối đánh giá (1-5 sao)" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+                <div style={{ width: '100%', height: 300 }}>
+                  <ResponsiveContainer>
+                    <BarChart data={phanPhoiTheoTyLe}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#EEF3FB" />
+                      <XAxis dataKey="sao" tick={{ fill: '#42546B', fontSize: 12 }} />
+                      <YAxis unit="%" tick={{ fill: '#42546B', fontSize: 12 }} />
+                      <Tooltip
+                        formatter={(value, _, payload) => [
+                          `${Number(value ?? 0).toFixed(1)}% (${payload?.payload?.soLuong ?? 0} sinh viên)`,
+                          'Tỷ lệ'
+                        ]}
+                      />
+                      <Bar dataKey="tyLe" fill="#1469B1" radius={[8, 8, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+                <Typography.Text style={{ color: '#7A8FA8', fontSize: 12 }}>
+                  Tổng mẫu phản hồi: {tongDanhGia} sinh viên
+                </Typography.Text>
+              </Card>
+            </Col>
+          </Row>
+
+          <Row gutter={[16, 16]}>
+            <Col xs={24} md={24} lg={10}>
+              <Card title="Dữ liệu định tính: Nội dung phản hồi thực tế" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+                <List
+                  dataSource={data.phanHoiSinhVien}
+                  locale={{ emptyText: 'Chưa có phản hồi' }}
+                  style={{ maxHeight: 324, overflowY: 'auto', paddingRight: 8 }}
+                  renderItem={(item) => (
+                    <List.Item style={{ paddingBlock: 10, borderBottom: '1px solid #EEF3FB' }}>
+                      <Typography.Text style={{ color: '#42546B', fontSize: 13, lineHeight: 1.65 }}>
+                        {item.noiDung}
+                      </Typography.Text>
+                    </List.Item>
+                  )}
+                />
+              </Card>
+            </Col>
+
+            <Col xs={24} md={24} lg={14}>
+              <Card title="Bảng Khuyến nghị & Can thiệp" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+                <Table
+                  rowKey="id"
+                  dataSource={data.khuyenNghi}
+                  columns={recommendationColumns}
+                  size="small"
+                  tableLayout="fixed"
+                  pagination={false}
+                  locale={{ emptyText: 'Không có khuyến nghị' }}
+                />
+              </Card>
+            </Col>
+          </Row>
+        </div>
+      ) : null}
+    </Modal>
+    )
+  }

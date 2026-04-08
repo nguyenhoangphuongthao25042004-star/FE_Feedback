@@ -217,6 +217,20 @@ export const getFeedbackFormMetadata = async (): Promise<ApiSuccessResponse<Feed
         { label: 'Yêu cầu ở mức vừa phải', value: 'vua-phai' },
         { label: 'Yêu cầu ít', value: 'it' }
       ],
+      materialsQualityOptions: [
+        { label: 'Rất tốt', value: 'rat-tot' },
+        { label: 'Tốt', value: 'tot' },
+        { label: 'Bình thường', value: 'binh-thuong' },
+        { label: 'Cần cải thiện', value: 'can-cai-thien' },
+        { label: 'Rất cần cải thiện', value: 'rat-can-cai-thien' }
+      ],
+      trainingEvaluationOptions: [
+        { label: 'Rất hài lòng', value: 'rat-hai-long' },
+        { label: 'Hài lòng', value: 'hai-long' },
+        { label: 'Bình thường', value: 'binh-thuong' },
+        { label: 'Không hài lòng', value: 'khong-hai-long' },
+        { label: 'Rất không hài lòng', value: 'rat-khong-hai-long' }
+      ],
       likertScaleOptions: [
         { label: '1', value: '1' },
         { label: '2', value: '2' },

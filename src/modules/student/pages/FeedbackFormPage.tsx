@@ -52,12 +52,15 @@ const emptyValues: FeedbackFormValues = {
   outstandingSubjects: '',
   selfStudyHours: '',
   likertAnswers: {},
+  materialsQuality: '',
+  trainingEvaluation: '',
   studyTime: '',
   learningPreference: '',
   modePreference: '',
   studyMode: '',
   lecturerSupport: '',
   mainDifficulty: '',
+  facilitiesOpenQuestion: '',
   attentionCheck: false,
   attendanceRate: '',
   homeworkBeforeClass: '',
@@ -475,8 +478,16 @@ export default function FeedbackFormPage() {
             </Row>
           </SurveySectionCard>
 
-          <SurveySectionCard title="Section 4 - Câu hỏi mở" description="Các câu hỏi mở dùng để thu thập thêm ý kiến phản hồi từ sinh viên">
+          <SurveySectionCard title="Section 4 - Cơ sở vật chất" description="Đánh giá chất lượng cơ sở vật chất và trang thiết bị">
             <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}><DropdownField name="materialsQuality" label="Chất lượng cơ sở vật chất" options={metadata.materialsQualityOptions} required disabled={viewMode} /></Col>
+              <Col xs={24} md={12}><DropdownField name="trainingEvaluation" label="Đánh giá đào tạo" options={metadata.trainingEvaluationOptions} required disabled={viewMode} /></Col>
+            </Row>
+          </SurveySectionCard>
+
+          <SurveySectionCard title="Section 5 - Câu hỏi mở" description="Các câu hỏi mở dùng để thu thập thêm ý kiến phản hồi từ sinh viên">
+            <Row gutter={[16, 16]}>
+              <Col xs={24}><TextAreaField name="facilitiesOpenQuestion" label="Theo bạn nhà trường cần cải thiện gì về cơ sở vật chất?" required disabled={viewMode} /></Col>
               <Col xs={24}><TextAreaField name="lecturerSupport" label="Điều giảng viên có thể làm để bạn học tốt hơn" required disabled={viewMode} /></Col>
               <Col xs={24}><TextAreaField name="mainDifficulty" label="Khó khăn chính khiến bạn dễ rớt môn" required disabled={viewMode} /></Col>
               <Col xs={24}><DropdownField name="attendanceRate" label="Tỷ lệ tham gia lớp" options={metadata.attendanceRateOptions} required disabled={viewMode} /></Col>

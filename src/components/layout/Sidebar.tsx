@@ -1,4 +1,4 @@
-﻿import { AppstoreOutlined, BookOutlined, BulbOutlined, CommentOutlined, HistoryOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, BarChartOutlined, LineChartOutlined } from '@ant-design/icons'
+﻿import { AppstoreOutlined, BookOutlined, BulbOutlined, CommentOutlined, HistoryOutlined, MenuFoldOutlined, MenuUnfoldOutlined, UserOutlined, BarChartOutlined, FundOutlined } from '@ant-design/icons'
 import { Button, Menu } from 'antd'
 import { useLocation, useNavigate } from 'react-router-dom'
 
@@ -74,16 +74,13 @@ export default function Sidebar({ collapsed, onToggle, showToggle = true }: Side
           { key: '/admin/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },
           { key: '/admin/course-ranking', icon: <BarChartOutlined />, label: 'Xếp hạng môn học' },
           { key: '/admin/instructor-ranking', icon: <UserOutlined />, label: 'Xếp hạng giảng viên' },
-          { key: '/admin/department-analytics', icon: <LineChartOutlined />, label: 'Phân tích khoa' },
-          { key: '/admin/survey-data', icon: <CommentOutlined />, label: 'Dữ liệu khảo sát' },
-          { key: '/admin/data-quality', icon: <HistoryOutlined />, label: 'Chất lượng dữ liệu' },
-          { key: '/admin/reports', icon: <BulbOutlined />, label: 'Báo cáo' }
+          { key: '/admin/recommendations', icon: <FundOutlined />, label: 'Đề xuất cải thiện' },
+          { key: '/admin/data-quality', icon: <HistoryOutlined />, label: 'Chất lượng dữ liệu' }
         ] : isInstructor ? [
           { key: '/instructor/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },
           { key: '/instructor/courses', icon: <BookOutlined />, label: 'Danh sách môn giảng dạy' },
           { key: '/instructor/quality', icon: <BarChartOutlined />, label: 'Chỉ số chất lượng' },
           { key: '/instructor/feedback', icon: <CommentOutlined />, label: 'Phản hồi sinh viên' },
-          { key: '/instructor/trends', icon: <LineChartOutlined />, label: 'Xu hướng theo kỳ' },
           { key: '/instructor/recommendations', icon: <BulbOutlined />, label: 'Khuyến nghị cải tiến' }
         ] : [
           { key: '/student/dashboard', icon: <AppstoreOutlined />, label: 'Tổng quan' },

@@ -30,9 +30,10 @@ export const routeSpec: RouteSpecItem[] = [
   { vaiTro: 'Quản trị/Khoa', path: '/admin/dashboard', tenHienThi: 'Tổng quan', manHinh: 'Admin Dashboard', componentTrang: 'DashboardPage', layout: 'AdminLayout', api: ['/api/admin/dashboard'] },
   { vaiTro: 'Quản trị/Khoa', path: '/admin/course-ranking', tenHienThi: 'Xếp hạng môn học', manHinh: 'Màn hình Xếp hạng môn học', componentTrang: 'CourseRankingPage', layout: 'AdminLayout', api: ['/api/admin/course-ranking'] },
   { vaiTro: 'Quản trị/Khoa', path: '/admin/instructor-ranking', tenHienThi: 'Xếp hạng giảng viên', manHinh: 'Màn hình Xếp hạng giảng viên', componentTrang: 'InstructorRankingPage', layout: 'AdminLayout', api: ['/api/admin/instructor-ranking'] },
-  { vaiTro: 'Quản trị/Khoa', path: '/admin/analytics', tenHienThi: 'Phân tích khoa', manHinh: 'Màn hình Phân tích khoa', componentTrang: 'AnalyticsPage', layout: 'AdminLayout', api: [] },
   { vaiTro: 'Quản trị/Khoa', path: '/admin/data-quality', tenHienThi: 'Chất lượng dữ liệu', manHinh: 'Màn hình Chất lượng dữ liệu khảo sát', componentTrang: 'DataQualityPage', layout: 'AdminLayout', api: ['/api/admin/data-quality'] },
-  { vaiTro: 'Quản trị/Khoa', path: '/admin/reports', tenHienThi: 'Báo cáo', manHinh: 'Màn hình Báo cáo', componentTrang: 'ReportsPage', layout: 'AdminLayout', api: [] }
+  { vaiTro: 'Quản trị/Khoa', path: '/admin/recommendations', tenHienThi: 'Đề xuất cải thiện', manHinh: 'Màn hình Đề xuất cải thiện', componentTrang: 'RecommendationsPage', layout: 'AdminLayout', api: [] },
+  { vaiTro: 'Quản trị/Khoa', path: '/course/:id', tenHienThi: 'Chi tiết môn học', manHinh: 'Màn hình Course Drill-down', componentTrang: 'CourseDrilldownPage', layout: 'AdminLayout', api: ['/api/admin/course-drilldown/{id}'] },
+  { vaiTro: 'Quản trị/Khoa', path: '/instructor/:id', tenHienThi: 'Chi tiết giảng viên', manHinh: 'Màn hình Instructor Drill-down', componentTrang: 'InstructorDrilldownPage', layout: 'AdminLayout', api: ['/api/admin/instructor-drilldown/{id}'] }
 ]
 
 

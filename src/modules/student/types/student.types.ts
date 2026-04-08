@@ -77,6 +77,8 @@ export type FeedbackMetadata = {
   attendanceRateOptions: FeedbackMetadataOption[]
   homeworkOptions: FeedbackMetadataOption[]
   requirementLevelOptions: FeedbackMetadataOption[]
+  materialsQualityOptions: FeedbackMetadataOption[]
+  trainingEvaluationOptions: FeedbackMetadataOption[]
   likertScaleOptions: FeedbackMetadataOption[]
   likertQuestions: LikertQuestion[]
 }
@@ -95,12 +97,15 @@ export type FeedbackFormValues = {
   outstandingSubjects: string
   selfStudyHours: string
   likertAnswers: FeedbackLikertAnswers
+  materialsQuality: string
+  trainingEvaluation: string
   studyTime: string
   learningPreference: string
   modePreference: string
   studyMode: string
   lecturerSupport: string
   mainDifficulty: string
+  facilitiesOpenQuestion: string
   attentionCheck: boolean
   attendanceRate: string
   homeworkBeforeClass: string
