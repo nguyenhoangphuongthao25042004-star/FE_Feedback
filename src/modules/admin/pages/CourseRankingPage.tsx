@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDownOutlined, ArrowUpOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
+import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
 import { Button, Card, Col, Grid, Modal, List, Progress, Radio, Row, Space, Spin, Statistic, Table, Tag, Typography } from 'antd'
 import { BarChart, Bar, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Cell } from 'recharts'
 import type { ColumnsType } from 'antd/es/table'
 import type { KhuyenNghi } from '../types/drilldown.types'
+import { useNavigate } from 'react-router-dom'
 
 import PageHeader from '../../../components/layout/PageHeader'
 import EmptyState from '../../../components/utility/EmptyState'
@@ -13,6 +14,21 @@ import { getCourseDetail } from '../api/drilldown.api'
 import TrendLineChart from '../components/drilldown/TrendLineChart'
 
 const MAU_CHINH = '#005BAC'
+
+const detailSurfaceCardStyle = {
+  borderRadius: 20,
+  border: '1px solid #D7E1F0',
+  boxShadow: '0 12px 28px rgba(28, 61, 102, 0.08)'
+} as const
+
+const detailMetaChipStyle = {
+  background: '#F4F8FF',
+  border: '1px solid #D6E4F7',
+  borderRadius: 999,
+  padding: '6px 12px',
+  display: 'inline-flex',
+  alignItems: 'center'
+} as const
 
 type DoKho = 'Dễ' | 'Trung bình' | 'Khó'
 type TrangThai = 'Ổn định' | 'Cần rà soát' | 'Nguy cơ'
@@ -187,6 +203,7 @@ function hienThiXuHuong(xuHuong: number) {
 }
 
 export default function CourseRankingPage() {
+  const navigate = useNavigate()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
   const isTablet = Boolean(screens.md && !screens.xxl)
@@ -428,11 +445,10 @@ export default function CourseRankingPage() {
       align: 'center',
       render: (_value, record) => (
         <Button 
-          type="link" 
-          style={{ padding: 0, fontWeight: 600 }} 
+          icon={<EyeOutlined />} 
           onClick={() => {
             setSelectedCourseId(record.id)
-            setVisibleDrawer(true)
+            navigate(`/admin/course/${record.id}`)
           }}
         >
           Xem chi tiết
@@ -495,11 +511,10 @@ export default function CourseRankingPage() {
                       </div>
 
                       <Button
-                        type="link"
-                        style={{ padding: 0, fontWeight: 600, flexShrink: 0 }}
+                        icon={<EyeOutlined />}
                         onClick={() => {
                           setSelectedCourseId(item.id)
-                          setVisibleDrawer(true)
+                          navigate(`/admin/course/${item.id}`)
                         }}
                       >
                         Xem chi tiết
@@ -621,7 +636,16 @@ function CourseDetailDrawer({
 
   if (isError) {
     return (
-      <Modal title="Chi tiết môn học" onCancel={onClose} open={visible} footer={null}>
+      <Modal
+        title="Chi tiết môn học"
+        onCancel={onClose}
+        open={visible}
+        footer={null}
+        width={isMobile ? '96vw' : '92vw'}
+        style={{ maxWidth: 1340 }}
+        centered
+        bodyStyle={{ maxHeight: '80vh', overflowY: 'auto', overflowX: 'hidden', padding: isMobile ? 16 : 24 }}
+      >
         <ErrorState
           title="Không thể tải dữ liệu chi tiết môn học"
           description="Vui lòng thử lại sau ít phút."
@@ -633,7 +657,16 @@ function CourseDetailDrawer({
 
   if (!data && !isLoading) {
     return (
-      <Modal title="Chi tiết môn học" onCancel={onClose} open={visible} footer={null}>
+      <Modal
+        title="Chi tiết môn học"
+        onCancel={onClose}
+        open={visible}
+        footer={null}
+        width={isMobile ? '96vw' : '92vw'}
+        style={{ maxWidth: 1340 }}
+        centered
+        bodyStyle={{ maxHeight: '80vh', overflowY: 'auto', overflowX: 'hidden', padding: isMobile ? 16 : 24 }}
+      >
         <EmptyState title="Không tìm thấy môn học" description="Vui lòng kiểm tra lại mã môn học hoặc chọn môn khác." />
       </Modal>
     )
@@ -728,10 +761,8 @@ function CourseDetailDrawer({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <Card
             style={{
-              borderRadius: 16,
-              border: '1px solid #D7E6FA',
-              background: 'linear-gradient(120deg, #F7FBFF 0%, #EEF5FF 100%)',
-              boxShadow: '0 8px 22px rgba(0, 91, 172, 0.06)'
+              ...detailSurfaceCardStyle,
+              background: 'linear-gradient(120deg, #F7FBFF 0%, #EEF5FF 100%)'
             }}
           >
             <Row gutter={[20, 16]} align="middle">
@@ -742,13 +773,17 @@ function CourseDetailDrawer({
                 <Typography.Title level={3} style={{ margin: '6px 0 4px', color: MAU_CHINH }}>
                   {data.tenMonHoc}
                 </Typography.Title>
-                <Space size={10} wrap>
-                  <Typography.Text style={{ fontSize: 13, color: '#4A5F79' }}>
-                    Mã: {data.maMonHoc}
-                  </Typography.Text>
-                  <Typography.Text style={{ fontSize: 13, color: '#4A5F79' }}>
-                    {data.soPhanHoi} phản hồi
-                  </Typography.Text>
+                <Space size={10} wrap style={{ rowGap: 10 }}>
+                  <span style={detailMetaChipStyle}>
+                    <Typography.Text style={{ fontSize: 13, color: '#4A5F79', lineHeight: 1.4 }}>
+                      Mã: <strong style={{ color: '#163253' }}>{data.maMonHoc}</strong>
+                    </Typography.Text>
+                  </span>
+                  <span style={detailMetaChipStyle}>
+                    <Typography.Text style={{ fontSize: 13, color: '#4A5F79', lineHeight: 1.4 }}>
+                      {data.soPhanHoi} phản hồi
+                    </Typography.Text>
+                  </span>
                   <Tag
                     style={{
                       margin: 0,
@@ -796,7 +831,7 @@ function CourseDetailDrawer({
 
           <Card
             title="Phân rã 6 yếu tố chất lượng"
-            style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}
+            style={{ ...detailSurfaceCardStyle }}
             extra={
               <Radio.Group
                 size="small"
@@ -841,12 +876,12 @@ function CourseDetailDrawer({
 
           <Row gutter={[16, 16]}>
             <Col xs={24} md={24} lg={12}>
-              <Card title="Xu hướng QI qua 4 học kỳ gần nhất" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+              <Card title="Xu hướng QI qua 4 học kỳ gần nhất" style={{ ...detailSurfaceCardStyle }}>
                 <TrendLineChart data={data.xuHuongHocKy} />
               </Card>
             </Col>
             <Col xs={24} md={24} lg={12}>
-              <Card title="Phân phối đánh giá (1-5 sao)" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+              <Card title="Phân phối đánh giá (1-5 sao)" style={{ ...detailSurfaceCardStyle }}>
                 <div style={{ width: '100%', height: 300 }}>
                   <ResponsiveContainer>
                     <BarChart data={phanPhoiTheoTyLe}>
@@ -872,7 +907,7 @@ function CourseDetailDrawer({
 
           <Row gutter={[16, 16]}>
             <Col xs={24} md={24} lg={10}>
-              <Card title="Dữ liệu định tính: Nội dung phản hồi thực tế" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+              <Card title="Dữ liệu định tính: Nội dung phản hồi thực tế" style={{ ...detailSurfaceCardStyle }}>
                 <List
                   dataSource={data.phanHoiSinhVien}
                   locale={{ emptyText: 'Chưa có phản hồi' }}
@@ -889,7 +924,7 @@ function CourseDetailDrawer({
             </Col>
 
             <Col xs={24} md={24} lg={14}>
-              <Card title="Bảng Khuyến nghị & Can thiệp" style={{ borderRadius: 16, border: '1px solid #E1ECFA' }}>
+              <Card title="Bảng Khuyến nghị & Can thiệp" style={{ ...detailSurfaceCardStyle }}>
                 <Table
                   rowKey="id"
                   dataSource={data.khuyenNghi}

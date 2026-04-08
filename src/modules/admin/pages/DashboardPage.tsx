@@ -105,10 +105,12 @@ const courseSnapshots: CourseSnapshot[] = [
   { id: 'c12', semester: '2025-2026 HK1', course: 'Xác suất thống kê', department: 'Toán ứng dụng', instructor: 'ThS. Phan Thi N', qi: 2.97, responseCount: 102, clarity: 2.9, pace: 2.8, fairness: 3.0, support: 2.8, interaction: 2.9 }
 ]
 
-const qiTrendData: QITrendPoint[] = semesterKpiSnapshots.map((item) => ({
-  semester: item.semester,
-  qiAvg: item.avgQualityIndex
-}))
+const qiTrendData: QITrendPoint[] = semesterKpiSnapshots
+  .filter((item) => item.semester === '2025-2026 HK1' || item.semester === '2025-2026 HK2')
+  .map((item) => ({
+    semester: item.semester.replace('2025-2026', '2025 - 2026'),
+    qiAvg: item.avgQualityIndex
+  }))
 
 const recommendationPreview: RecommendationPreviewItem[] = [
   { id: 'r1', title: 'Thiết kế buổi huấn luyện về nhịp độ giảng dạy cho nhóm môn dưới 3.2', priority: 'P1', owner: 'Phòng Đào tạo' },
@@ -229,42 +231,42 @@ export default function DashboardPage() {
         title: 'Tổng số phản hồi',
         value: formatKpiValue('totalResponses', selectedSemesterSnapshot.totalResponses),
         trend: calcTrend(selectedSemesterSnapshot.totalResponses, previousSemesterSnapshot.totalResponses),
-        trendLabel: 'vs kỳ trước'
+        trendLabel: 'so với kỳ trước'
       },
       {
         key: 'totalCoursesRated',
         title: 'Tổng số môn được đánh giá',
         value: formatKpiValue('totalCoursesRated', selectedSemesterSnapshot.totalCoursesRated),
         trend: calcTrend(selectedSemesterSnapshot.totalCoursesRated, previousSemesterSnapshot.totalCoursesRated),
-        trendLabel: 'vs kỳ trước'
+        trendLabel: 'so với kỳ trước'
       },
       {
         key: 'totalInstructorsRated',
         title: 'Tổng số giảng viên được đánh giá',
         value: formatKpiValue('totalInstructorsRated', selectedSemesterSnapshot.totalInstructorsRated),
         trend: calcTrend(selectedSemesterSnapshot.totalInstructorsRated, previousSemesterSnapshot.totalInstructorsRated),
-        trendLabel: 'vs kỳ trước'
+        trendLabel: 'so với kỳ trước'
       },
       {
         key: 'avgQualityIndex',
         title: 'Chỉ số chất lượng trung bình',
         value: formatKpiValue('avgQualityIndex', selectedSemesterSnapshot.avgQualityIndex),
         trend: calcTrend(selectedSemesterSnapshot.avgQualityIndex, previousSemesterSnapshot.avgQualityIndex),
-        trendLabel: 'vs kỳ trước'
+        trendLabel: 'so với kỳ trước'
       },
       {
         key: 'validResponseRate',
         title: 'Tỷ lệ phản hồi hợp lệ',
         value: formatKpiValue('validResponseRate', selectedSemesterSnapshot.validResponseRate),
         trend: calcTrend(selectedSemesterSnapshot.validResponseRate, previousSemesterSnapshot.validResponseRate),
-        trendLabel: 'vs kỳ trước'
+        trendLabel: 'so với kỳ trước'
       },
       {
         key: 'activeAlertsCount',
         title: 'Số cảnh báo đang mở',
         value: formatKpiValue('activeAlertsCount', selectedSemesterSnapshot.activeAlertsCount),
         trend: calcTrend(selectedSemesterSnapshot.activeAlertsCount, previousSemesterSnapshot.activeAlertsCount),
-        trendLabel: 'vs kỳ trước'
+        trendLabel: 'so với kỳ trước'
       }
     ]
   }, [selectedSemesterSnapshot, previousSemesterSnapshot])
@@ -446,24 +448,24 @@ export default function DashboardPage() {
           description="Hệ thống hỗ trợ ra quyết định cho quản trị chất lượng giảng dạy theo học kỳ, khoa và giảng viên"
           contentGap={8}
           extra={(
-            <Space wrap direction={isMobile ? 'vertical' : 'horizontal'} style={{ width: isMobile ? '100%' : 'auto' }}>
+            <Space wrap>
               <Button
                 icon={<DownloadOutlined />}
                 size="large"
-                style={{ minHeight: 44, padding: '8px 16px', fontSize: 15, width: isMobile ? '100%' : undefined }}
+                style={{ minHeight: 44 }}
                 aria-label="Xuất CSV"
                 onClick={handleExportCsv}
               >
-                Xuất DSS CSV
+                Export CSV
               </Button>
               <Button
                 icon={<FilePdfOutlined />}
                 size="large"
-                style={{ minHeight: 44, padding: '8px 16px', fontSize: 15, width: isMobile ? '100%' : undefined }}
+                style={{ minHeight: 44 }}
                 aria-label="Xuất PDF"
                 onClick={handleExportPdf}
               >
-                Xuất DSS PDF
+                Export PDF
               </Button>
             </Space>
           )}

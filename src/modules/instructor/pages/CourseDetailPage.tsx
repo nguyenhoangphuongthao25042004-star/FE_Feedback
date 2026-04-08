@@ -406,8 +406,7 @@ function CourseDetailDashboard() {
           </Card>
         </div>
 
-        <div style={{ maxHeight: 'calc(100vh - 240px)', overflow: 'auto', paddingRight: 8 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
         <Row gutter={[16, 16]}>
         <Col xs={24} lg={6}>
           <StatCard title="Chỉ số chất lượng" value={safeData.kpis.qualityIndex.toFixed(1)} />
@@ -525,7 +524,6 @@ function CourseDetailDashboard() {
           </Card>
         </Col>
         </Row>
-          </div>
         </div>
       </div>
     </div>

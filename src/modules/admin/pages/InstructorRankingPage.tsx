@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { ArrowDownOutlined, ArrowUpOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
+import { ArrowDownOutlined, ArrowUpOutlined, EyeOutlined, FilterFilled, FilterOutlined, MinusOutlined } from '@ant-design/icons'
 import { Button, Card, Col, Grid, Modal, List, Radio, Row, Space, Spin, Statistic, Table, Tag, Typography } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
+import { useNavigate } from 'react-router-dom'
 
 import PageHeader from '../../../components/layout/PageHeader'
 import EmptyState from '../../../components/utility/EmptyState'
@@ -13,6 +14,21 @@ import TrendLineChart from '../components/drilldown/TrendLineChart'
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 
 const MAU_CHINH = '#005BAC'
+
+const detailSurfaceCardStyle = {
+  borderRadius: 20,
+  border: '1px solid #D7E1F0',
+  boxShadow: '0 12px 28px rgba(28, 61, 102, 0.08)'
+} as const
+
+const detailMetaChipStyle = {
+  background: '#F4F8FF',
+  border: '1px solid #D6E4F7',
+  borderRadius: 999,
+  padding: '6px 12px',
+  display: 'inline-flex',
+  alignItems: 'center'
+} as const
 
 type TrangThai = 'Ổn định' | 'Cần rà soát' | 'Nguy cơ'
 
@@ -123,6 +139,7 @@ function layXuHuong(trend: number) {
 }
 
 export default function InstructorRankingPage() {
+  const navigate = useNavigate()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
   const isTablet = Boolean(screens.md && !screens.xxl)
@@ -331,11 +348,10 @@ export default function InstructorRankingPage() {
       align: 'center',
       render: (_value, record) => (
         <Button 
-          type="link" 
-          style={{ padding: 0, fontWeight: 600, fontSize: 13 }} 
+          icon={<EyeOutlined />} 
           onClick={() => {
             setSelectedInstructorId(record.id)
-            setVisibleDrawer(true)
+            navigate(`/admin/instructor/${record.id}`)
           }}
         >
           Xem chi tiết
@@ -406,11 +422,10 @@ export default function InstructorRankingPage() {
                       </div>
 
                       <Button
-                        type="link"
-                        style={{ padding: 0, fontWeight: 600, fontSize: 13, flexShrink: 0 }}
+                        icon={<EyeOutlined />}
                         onClick={() => {
                           setSelectedInstructorId(item.id)
-                          setVisibleDrawer(true)
+                          navigate(`/admin/instructor/${item.id}`)
                         }}
                       >
                         Xem chi tiết
@@ -494,7 +509,16 @@ function InstructorDetailDrawer({
 
   if (isError) {
     return (
-      <Modal title="Chi tiết giảng viên" onCancel={onClose} open={visible} footer={null}>
+      <Modal
+        title="Chi tiết giảng viên"
+        onCancel={onClose}
+        open={visible}
+        footer={null}
+        width={isMobile ? '96vw' : '90vw'}
+        style={{ maxWidth: 1400 }}
+        centered
+        bodyStyle={{ maxHeight: '80vh', overflowY: 'auto', overflowX: 'hidden', padding: isMobile ? 16 : 24 }}
+      >
         <ErrorState
           title="Không thể tải dữ liệu chi tiết giảng viên"
           description="Vui lòng thử lại sau ít phút."
@@ -506,11 +530,26 @@ function InstructorDetailDrawer({
 
   if (!data && !isLoading) {
     return (
-      <Modal title="Chi tiết giảng viên" onCancel={onClose} open={visible} footer={null}>
+      <Modal
+        title="Chi tiết giảng viên"
+        onCancel={onClose}
+        open={visible}
+        footer={null}
+        width={isMobile ? '96vw' : '90vw'}
+        style={{ maxWidth: 1400 }}
+        centered
+        bodyStyle={{ maxHeight: '80vh', overflowY: 'auto', overflowX: 'hidden', padding: isMobile ? 16 : 24 }}
+      >
         <EmptyState title="Không tìm thấy giảng viên" description="Vui lòng kiểm tra lại mã giảng viên hoặc chọn giảng viên khác." />
       </Modal>
     )
   }
+
+  const confidenceStatus = data.doTinCay >= 80
+    ? { text: 'Ổn định', color: '#3B8C2A', bg: '#F1F9E9', border: '#DDF0CB' }
+    : data.doTinCay >= 50
+      ? { text: 'Cần rà soát', color: '#A87400', bg: '#FFF8E8', border: '#FBE9BC' }
+      : { text: 'Nguy cơ', color: '#C2352A', bg: '#FFF0EF', border: '#F8D3D0' }
 
   return (
     <Modal 
@@ -529,34 +568,61 @@ function InstructorDetailDrawer({
         </div>
       ) : data ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {/* HEADER SECTION */}
-          <Card style={{ borderRadius: 16, background: '#F8FAFB' }}>
+          <Card
+            style={{
+              ...detailSurfaceCardStyle,
+              background: 'linear-gradient(120deg, #F7FBFF 0%, #EEF5FF 100%)'
+            }}
+          >
             <Row gutter={[24, 16]} align="middle">
-              <Col xs={24} md={12}>
-                <Typography.Title level={3} style={{ marginBottom: 6, color: '#005BAC' }}>
-                  Tên giảng viên
-                </Typography.Title>
-                <Typography.Text style={{ fontSize: 18, fontWeight: 600, color: '#1F2937' }}>
-                  {data.tenGiangVien}
+              <Col xs={24} md={12} lg={10}>
+                <Typography.Text style={{ color: '#607D9A', fontSize: 12, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+                  Phân tích chi tiết giảng viên
                 </Typography.Text>
+                <Typography.Title level={3} style={{ margin: '6px 0 4px', color: MAU_CHINH }}>
+                  {data.tenGiangVien}
+                </Typography.Title>
+                <Space size={10} wrap style={{ rowGap: 10 }}>
+                  <span style={detailMetaChipStyle}>
+                    <Typography.Text style={{ fontSize: 13, color: '#4A5F79', lineHeight: 1.4 }}>
+                      {data.soMon} môn đang dạy
+                    </Typography.Text>
+                  </span>
+                  <span style={detailMetaChipStyle}>
+                    <Typography.Text style={{ fontSize: 13, color: '#4A5F79', lineHeight: 1.4 }}>
+                      Độ tin cậy: <strong style={{ color: '#163253' }}>{data.doTinCay}%</strong>
+                    </Typography.Text>
+                  </span>
+                  <Tag
+                    style={{
+                      margin: 0,
+                      color: confidenceStatus.color,
+                      background: confidenceStatus.bg,
+                      borderColor: confidenceStatus.border,
+                      fontWeight: 600
+                    }}
+                  >
+                    {confidenceStatus.text}
+                  </Tag>
+                </Space>
               </Col>
-              <Col xs={24} md={4}>
+              <Col xs={24} sm={8} lg={4}>
                 <Statistic 
                   title="Tổng QI" 
                   value={data.diemQiTong} 
                   precision={1} 
                   suffix="/ 5"
-                  valueStyle={{ color: '#005BAC', fontSize: 24 }}
+                  valueStyle={{ color: MAU_CHINH, fontSize: 24, fontWeight: 700 }}
                 />
               </Col>
-              <Col xs={24} md={4}>
+              <Col xs={24} sm={8} lg={4}>
                 <Statistic 
                   title="Số môn" 
                   value={data.soMon}
-                  valueStyle={{ color: '#005BAC', fontSize: 24 }}
+                  valueStyle={{ color: MAU_CHINH, fontSize: 24, fontWeight: 700 }}
                 />
               </Col>
-              <Col xs={24} md={4}>
+              <Col xs={24} sm={8} lg={4}>
                 <Statistic 
                   title="Độ tin cậy" 
                   value={data.doTinCay}
@@ -574,7 +640,7 @@ function InstructorDetailDrawer({
           {/* TOP CHARTS: QI by Course & Trend */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <Card title="QI theo môn học" style={{ borderRadius: 16 }}>
+              <Card title="QI theo môn học" style={{ ...detailSurfaceCardStyle }}>
                 <div style={{ width: '100%', height: isMobile ? 240 : 300 }}>
                   <ResponsiveContainer>
                     <BarChart data={data.qiTheoMonHoc}>
@@ -590,14 +656,14 @@ function InstructorDetailDrawer({
             </Col>
 
             <Col xs={24} lg={12}>
-              <Card title="Xu hướng nhiều học kỳ" style={{ borderRadius: 16 }}>
+              <Card title="Xu hướng nhiều học kỳ" style={{ ...detailSurfaceCardStyle }}>
                 <TrendLineChart data={data.xuHuongHocKy} />
               </Card>
             </Col>
           </Row>
 
           {/* RATING DISTRIBUTION */}
-          <Card title="Phân phối đánh giá 1–5 sao" style={{ borderRadius: 16 }}>
+          <Card title="Phân phối đánh giá 1–5 sao" style={{ ...detailSurfaceCardStyle }}>
             <div style={{ width: '100%', height: isMobile ? 240 : 280 }}>
               <ResponsiveContainer>
                 <BarChart data={data.phanPhoiDanhGia}>
@@ -615,14 +681,14 @@ function InstructorDetailDrawer({
           <Row gutter={[16, 16]}>
             {/* LEFT COLUMN: Factor Impact */}
             <Col xs={24} lg={14}>
-              <Card title="Mức độ ảnh hưởng yếu tố" style={{ borderRadius: 16 }}>
+              <Card title="Mức độ ảnh hưởng yếu tố" style={{ ...detailSurfaceCardStyle }}>
                 <HorizontalImpactChart data={data.mucDoAnhHuongYeuTo} />
               </Card>
             </Col>
 
             {/* RIGHT COLUMN: Suggestions */}
             <Col xs={24} lg={10}>
-              <Card title="Gợi ý cải thiện" style={{ borderRadius: 16 }}>
+              <Card title="Gợi ý cải thiện" style={{ ...detailSurfaceCardStyle }}>
                 <List
                   dataSource={data.goiYCaiThien}
                   locale={{ emptyText: 'Chưa có gợi ý' }}
@@ -637,7 +703,7 @@ function InstructorDetailDrawer({
           </Row>
 
           {/* STUDENT FEEDBACK SECTION */}
-          <Card title="Ý kiến phản hồi từ sinh viên" style={{ borderRadius: 16 }}>
+          <Card title="Ý kiến phản hồi từ sinh viên" style={{ ...detailSurfaceCardStyle }}>
             <List
               dataSource={data.phanHoiSinhVien}
               locale={{ emptyText: 'Chưa có phản hồi' }}

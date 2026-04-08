@@ -62,6 +62,8 @@ export default function AppRoutes() {
         <Route path="/admin/instructor-ranking" element={<AdminLayout><InstructorRankingPage /></AdminLayout>} />
         <Route path="/admin/recommendations" element={<AdminLayout><RecommendationsPage /></AdminLayout>} />
         <Route path="/admin/data-quality" element={<AdminLayout><DataQualityPage /></AdminLayout>} />
+        <Route path="/admin/course/:id" element={<AdminLayout><CourseDrilldownPage /></AdminLayout>} />
+        <Route path="/admin/instructor/:id" element={<AdminLayout><InstructorDrilldownPage /></AdminLayout>} />
         <Route path="/course/:id" element={<AdminLayout><CourseDrilldownPage /></AdminLayout>} />
         <Route path="/instructor/:id" element={<AdminLayout><InstructorDrilldownPage /></AdminLayout>} />
 
